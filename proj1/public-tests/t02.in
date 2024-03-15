@@ -1,0 +1,4 @@
+p Paragem1 2 4
+p "Paragem 2" -3.4 1.4
+p Paragem1
+q

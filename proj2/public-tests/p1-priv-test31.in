@@ -1,0 +1,662 @@
+p paragem1   1.971914634095   4.200938585774
+p paragem2   3.992200167380   3.915496118793
+p paragem3   0.987756846467   4.558236789684
+p paragem4   3.841147974060   1.676113778574
+p paragem5   2.769849778977   1.388873554016
+p paragem6   3.144354623810   2.386985259311
+p paragem7   2.567004550978   1.823922363959
+p paragem8   4.580975340019   4.761148625874
+p paragem9   3.586484647163   3.178558639800
+p paragem10   3.034844381285   0.708012776779
+p paragem11   1.214433853149   0.081502858122
+p paragem12   4.020883771135   0.686157883930
+p paragem13   2.004721971231   0.783395446270
+p paragem14   0.544044010129   0.648952233907
+p paragem15   1.091284526555   4.994622590018
+p paragem16   4.195561173463   2.564661972022
+p paragem17   1.480158088487   3.063199162978
+p paragem18   2.621435950334   3.187761338515
+p paragem19   4.863875119418   2.467914934954
+p paragem20   3.856788488970   1.462583922065
+p paragem21   3.849569181376   2.633724896067
+p paragem22   4.457647260026   2.001143110451
+p paragem23   1.762291736324   1.416573730026
+p paragem24   4.595132369825   4.038622600044
+p paragem25   4.746635376823   0.348776381160
+p paragem26   0.430279239281   2.629976751111
+p paragem27   3.316134635041   0.961069229972
+p paragem28   1.744464676243   4.451163012744
+p paragem29   0.100115244323   0.320856603943
+p paragem30   0.315479191633   2.288508686371
+p paragem31   4.853170658393   1.191399770878
+p paragem32   4.254598933856   4.511040367424
+p paragem33   2.698801703611   1.333328746880
+p paragem34   3.801243681834   1.876034881862
+p paragem35   3.338618803927   2.562676820700
+p paragem36   0.196401716767   2.658032170803
+p paragem37   4.659175281254   2.188187982975
+p paragem38   3.604761715329   4.654048976793
+p paragem39   3.692671574509   1.421467015250
+p paragem40   1.770243398738   3.199894082826
+p paragem41   0.829870831608   3.439306951333
+p paragem42   4.400376181305   2.200522638019
+p paragem43   1.651685648436   4.146005466648
+p paragem44   4.466862072920   1.144840855219
+p paragem45   3.433349541590   1.751800892759
+p paragem46   2.943200665965   4.782341264553
+p paragem47   4.293381629648   3.286520197655
+p paragem48   4.619848944535   2.197799597493
+p paragem49   4.073834481683   1.992183333259
+p paragem50   4.554860153960   3.421092626369
+p paragem51   1.079124794844   2.412453283282
+p paragem52   4.600641268585   4.751261870727
+p paragem53   4.405310847520   0.738300073770
+p paragem54   2.159767091349   3.205402981586
+p paragem55   1.405297062083   3.097982419700
+p paragem56   1.537289368705   3.930010490087
+p paragem57   1.130533125778   2.235167896019
+p paragem58   1.381173360339   0.937665547681
+p paragem59   2.082506402900   2.782218776542
+p paragem60   4.534019669301   0.848035430931
+p paragem61   0.630376695483   0.515855942162
+p paragem62   3.802376142145   2.477220332938
+p paragem63   4.675019932759   4.923758325131
+p paragem64   1.915941656062   3.422225084352
+p paragem65   1.843317708393   3.748854412115
+p paragem66   1.161307693069   1.470801810022
+p paragem67   1.222063678420   2.922442503237
+p paragem68   3.660742579336   0.761948959325
+p paragem69   3.967351940911   0.627374523611
+p paragem70   3.725356945640   0.820509668356
+p paragem71   4.750520158443   0.372649002994
+p paragem72   2.607816899013   0.262646312016
+p paragem73   1.200311862026   0.881053281893
+p paragem74   3.663272058434   3.988990259352
+p paragem75   4.837025692611   3.282818264925
+p paragem76   3.798674209415   3.197291727735
+p paragem77   0.674512058345   0.467402385765
+p paragem78   0.391160708569   2.601050349232
+p paragem79   1.023275431256   0.349531988776
+p paragem80   4.098386400891   2.307102366959
+p paragem81   3.777904176981   2.866593141978
+p paragem82   0.789035642887   0.259694093959
+p paragem83   1.021643053285   4.999967855401
+p paragem84   0.627342379013   4.449778222223
+p paragem85   0.270287888250   4.988994996524
+p paragem86   0.361643997189   4.352699324653
+p paragem87   4.615345636669   0.020808044365
+p paragem88   0.901861328586   2.969460896202
+p paragem89   1.958451153225   0.815657496366
+p paragem90   4.098475763620   4.565133387020
+p paragem91   2.762425112427   1.795476843508
+p paragem92   2.262879229273   2.897149970707
+p paragem93   0.498200317611   3.436937173101
+p paragem94   3.786469161877   2.654039940170
+p paragem95   4.961142307129   1.521475748867
+p paragem96   4.388068890845   2.884855562767
+p paragem97   3.144549656727   3.739046481782
+p paragem98   3.739014334855   0.177104533732
+p paragem99   4.626882755955   4.166192710011
+p paragem100   4.155187704207   4.366356713868
+p paragem101   3.719056036192   4.897170646534
+p paragem102   4.917978690899   4.516831701396
+p paragem103   2.486292595270   3.334401672862
+p paragem104   4.150059169228   0.819840017157
+p paragem105   0.384973404177   4.444743750824
+p paragem106   1.240220592003   3.248534930520
+p paragem107   1.145684898899   3.147398516604
+p paragem108   1.584335687377   3.503099823605
+p paragem109   1.157139761447   1.643885216510
+p paragem110   3.165360967706   0.370804849253
+p paragem111   3.255660412021   1.118282066248
+p paragem112   4.857328548030   2.553429856223
+p paragem113   2.730534389955   1.400210066419
+p paragem114   0.566402774102   3.596342880557
+p paragem115   2.962699594424   2.357417145910
+p paragem116   2.254587790116   4.721590480638
+p paragem117   4.238422179706   1.681755628289
+p paragem118   0.016157298822   2.172566478687
+p paragem119   2.992406498172   1.724714774976
+p paragem120   1.169458523472   4.166216470379
+p paragem121   2.414751398570   3.377379902349
+p paragem122   1.524778416625   2.409679115475
+p paragem123   0.912778936752   3.560436299797
+p paragem124   0.204321513979   3.109114106330
+p paragem125   3.479918955583   2.069918698198
+p paragem126   3.188200764446   3.369682481685
+p paragem127   0.923112337907   1.735579365276
+p paragem128   3.135789431695   3.045529310147
+p paragem129   1.641872190704   3.653646727863
+p paragem130   1.011063871445   3.702192205797
+p paragem131   3.423782684106   4.604571785128
+p paragem132   1.286327411088   3.265651661561
+p paragem133   0.438218140247   2.662204863812
+p paragem134   4.386919638788   1.302484712239
+p paragem135   0.468701180289   3.430624638419
+p paragem136   1.808004538439   0.556378159931
+p paragem137   2.966057275406   2.883452578859
+p paragem138   1.443888876328   3.332782955064
+p paragem139   1.441897059065   3.878836214486
+p paragem140   0.948754910356   1.648210392635
+p paragem141   0.017892871992   4.921816014648
+p paragem142   1.657395377596   4.136955677130
+p paragem143   2.182484984949   0.941005209899
+p paragem144   4.594651940090   4.793184809290
+p paragem145   3.495377015087   3.824357175652
+p paragem146   3.428928958452   0.605715809206
+p paragem147   3.871367473095   1.919159696865
+p paragem148   4.581364560677   4.715256371868
+p paragem149   1.017741081779   4.309585613343
+p paragem150   2.740210249433   3.968284197137
+p paragem151   4.524662357068   1.486442262068
+p paragem152   4.369894840927   4.548214787873
+p paragem153   2.880997740608   2.490719632474
+p paragem154   1.369555844632   0.813783717255
+p paragem155   2.461994109890   4.322894802002
+p paragem156   4.244710814322   2.318310754988
+p paragem157   1.455266429789   2.479886981882
+p paragem158   3.420892194109   0.902106191917
+p paragem159   0.695290998879   3.637751417066
+p paragem160   2.462108590390   3.015544131871
+p paragem161   3.621259941077   4.190668013967
+p paragem162   1.109827710832   0.891037548841
+p paragem163   0.606293918382   2.492627411845
+p paragem164   1.802213022859   0.691192269181
+p paragem165   4.659476468647   1.624035000160
+p paragem166   3.110477262228   4.542423272292
+p paragem167   4.090638057837   4.184138823386
+p paragem168   1.674858453532   2.480372100827
+p paragem169   3.294155818082   1.971635798445
+p paragem170   1.294530598118   3.044414298164
+p paragem171   0.362725053151   0.756149925644
+p paragem172   3.236036909854   0.539241410112
+p paragem173   1.441347602029   1.817991482940
+p paragem174   0.455742897678   1.656929101635
+p paragem175   4.672473233506   2.136638603237
+p paragem176   1.327306614875   2.917851490396
+p paragem177   3.808889039237   3.293733172255
+p paragem178   0.786360584100   2.437134325708
+p paragem179   3.128326597218   4.415182957619
+p paragem180   1.039217955451   2.588573606959
+p paragem181   2.130996879251   2.787803063536
+p paragem182   1.971941884594   4.149695217679
+p paragem183   1.630067316177   1.221634934760
+p paragem184   3.193270733204   3.646800340454
+p paragem185   1.691214636290   4.924223136587
+p paragem186   0.680373059903   4.487801331323
+p paragem187   0.027042741434   2.053939689442
+p paragem188   3.871931174710   3.916409969757
+p paragem189   0.573339069063   1.468390343463
+p paragem190   3.605028946700   4.327674072388
+p paragem191   2.245525560456   0.245812300241
+p paragem192   3.539545474825   4.932335563904
+p paragem193   2.369469887283   1.054414597365
+p paragem194   0.469597552656   4.325906058925
+p paragem195   1.914479663556   0.497796482173
+p paragem196   3.285599545709   1.508815508107
+p paragem197   0.658510723458   4.045476542807
+p paragem198   0.267111477566   0.257541430303
+p paragem199   3.904341770757   2.288578041964
+p paragem200   2.212801176222   3.460382210771
+c Carreira1
+c Carreira2
+c Carreira3
+c Carreira4
+c Carreira5
+c Carreira6
+c Carreira7
+c Carreira8
+c Carreira9
+c Carreira10
+c Carreira11
+c Carreira12
+c Carreira13
+c Carreira14
+c Carreira15
+l Carreira1 paragem53 paragem159 1.89 8
+l Carreira1 paragem159 paragem25 0.48 3
+l Carreira1 paragem25 paragem170 1.49 1
+l Carreira1 paragem170 paragem9 1.88 2
+l Carreira1 paragem9 paragem6 1.96 1
+l Carreira1 paragem6 paragem64 1.38 4
+l Carreira1 paragem64 paragem105 1.31 5
+l Carreira1 paragem105 paragem4 0.26 7
+l Carreira1 paragem4 paragem103 0.27 4
+l Carreira1 paragem103 paragem124 1.76 2
+l Carreira1 paragem124 paragem78 1.34 3
+l Carreira1 paragem78 paragem162 1.89 4
+l Carreira1 paragem162 paragem14 0.08 2
+l Carreira1 paragem14 paragem10 0.42 4
+l Carreira1 paragem10 paragem39 0.62 2
+l Carreira1 paragem39 paragem28 1.30 1
+l Carreira1 paragem28 paragem18 0.17 5
+l Carreira1 paragem18 paragem153 1.37 8
+l Carreira1 paragem153 paragem15 0.13 9
+l Carreira1 paragem15 paragem53 0.35 6
+l Carreira2 paragem149 paragem14 1.71 2
+l Carreira2 paragem14 paragem61 1.96 10
+l Carreira2 paragem61 paragem48 1.81 8
+l Carreira2 paragem48 paragem138 0.31 1
+l Carreira2 paragem138 paragem148 0.53 1
+l Carreira2 paragem148 paragem183 0.96 7
+l Carreira2 paragem183 paragem195 0.53 6
+l Carreira2 paragem195 paragem82 1.15 4
+l Carreira2 paragem82 paragem103 1.33 5
+l Carreira2 paragem103 paragem9 1.97 4
+l Carreira2 paragem9 paragem78 0.26 2
+l Carreira2 paragem78 paragem162 0.12 6
+l Carreira2 paragem162 paragem90 1.54 2
+l Carreira2 paragem90 paragem19 1.54 3
+l Carreira2 paragem19 paragem92 1.60 6
+l Carreira2 paragem92 paragem28 0.90 6
+l Carreira2 paragem28 paragem188 0.07 4
+l Carreira2 paragem188 paragem126 0.70 8
+l Carreira2 paragem126 paragem122 1.64 9
+l Carreira2 paragem122 paragem21 0.29 7
+l Carreira2 paragem21 paragem63 0.68 10
+l Carreira2 paragem63 paragem64 1.85 1
+l Carreira2 paragem64 paragem33 0.14 2
+l Carreira2 paragem33 paragem94 0.65 2
+l Carreira2 paragem94 paragem149 1.78 3
+l Carreira3 paragem82 paragem159 0.24 1
+l Carreira3 paragem159 paragem80 0.94 3
+l Carreira3 paragem80 paragem35 1.42 8
+l Carreira3 paragem35 paragem31 1.10 4
+l Carreira3 paragem31 paragem133 1.69 10
+l Carreira3 paragem133 paragem124 1.77 10
+l Carreira3 paragem124 paragem172 1.63 1
+l Carreira3 paragem172 paragem3 1.49 8
+l Carreira3 paragem3 paragem187 1.31 8
+l Carreira3 paragem187 paragem191 1.59 10
+l Carreira3 paragem191 paragem132 1.69 7
+l Carreira3 paragem132 paragem87 0.23 9
+l Carreira3 paragem87 paragem177 1.69 6
+l Carreira3 paragem177 paragem82 0.37 7
+l Carreira4 paragem199 paragem165 0.03 6
+l Carreira4 paragem165 paragem158 1.63 3
+l Carreira4 paragem158 paragem143 0.00 1
+l Carreira4 paragem143 paragem31 0.99 8
+l Carreira4 paragem31 paragem46 1.59 4
+l Carreira4 paragem46 paragem133 1.99 10
+l Carreira4 paragem133 paragem172 1.26 2
+l Carreira4 paragem172 paragem147 0.42 8
+l Carreira4 paragem147 paragem102 0.74 9
+l Carreira4 paragem102 paragem81 1.34 8
+l Carreira4 paragem81 paragem132 0.47 2
+l Carreira4 paragem132 paragem124 1.03 7
+l Carreira4 paragem124 paragem116 1.23 4
+l Carreira4 paragem116 paragem146 0.80 9
+l Carreira4 paragem146 paragem199 1.44 9
+l Carreira5 paragem131 paragem136 1.06 5
+l Carreira5 paragem136 paragem158 1.04 7
+l Carreira5 paragem158 paragem143 0.81 3
+l Carreira5 paragem143 paragem146 1.13 7
+l Carreira5 paragem146 paragem19 0.79 9
+l Carreira5 paragem19 paragem36 0.35 5
+l Carreira5 paragem36 paragem131 0.34 4
+l Carreira6 paragem147 paragem141 1.10 10
+l Carreira6 paragem141 paragem92 0.68 9
+l Carreira6 paragem92 paragem35 1.33 3
+l Carreira6 paragem35 paragem25 1.43 7
+l Carreira6 paragem25 paragem41 1.16 6
+l Carreira6 paragem41 paragem26 1.98 1
+l Carreira6 paragem26 paragem21 0.82 6
+l Carreira6 paragem21 paragem152 0.11 2
+l Carreira6 paragem152 paragem164 0.18 6
+l Carreira6 paragem164 paragem150 1.55 6
+l Carreira6 paragem150 paragem30 1.49 9
+l Carreira6 paragem30 paragem1 1.16 3
+l Carreira6 paragem1 paragem55 1.72 2
+l Carreira6 paragem55 paragem125 0.96 8
+l Carreira6 paragem125 paragem147 0.02 9
+l Carreira7 paragem148 paragem141 0.92 9
+l Carreira7 paragem141 paragem45 1.54 9
+l Carreira7 paragem45 paragem41 1.86 7
+l Carreira7 paragem41 paragem178 0.83 10
+l Carreira7 paragem178 paragem152 1.51 9
+l Carreira7 paragem152 paragem104 0.34 8
+l Carreira7 paragem104 paragem36 1.38 6
+l Carreira7 paragem36 paragem8 1.25 10
+l Carreira7 paragem8 paragem179 1.45 3
+l Carreira7 paragem179 paragem5 1.00 2
+l Carreira7 paragem5 paragem28 0.79 8
+l Carreira7 paragem28 paragem148 0.40 1
+l Carreira8 paragem46 paragem141 0.49 6
+l Carreira8 paragem141 paragem132 0.20 8
+l Carreira8 paragem132 paragem135 1.67 8
+l Carreira8 paragem135 paragem154 0.02 2
+l Carreira8 paragem154 paragem155 0.81 6
+l Carreira8 paragem155 paragem38 1.28 6
+l Carreira8 paragem38 paragem188 0.42 1
+l Carreira8 paragem188 paragem46 1.54 5
+l Carreira9 paragem23 paragem5 0.64 7
+l Carreira9 paragem5 paragem181 1.97 1
+l Carreira9 paragem181 paragem116 1.72 1
+l Carreira9 paragem116 paragem154 0.19 2
+l Carreira9 paragem154 paragem132 0.64 2
+l Carreira9 paragem132 paragem100 1.79 9
+l Carreira9 paragem100 paragem188 1.57 10
+l Carreira9 paragem188 paragem180 0.48 5
+l Carreira9 paragem180 paragem157 1.26 9
+l Carreira9 paragem157 paragem60 1.89 3
+l Carreira9 paragem60 paragem99 1.14 4
+l Carreira9 paragem99 paragem195 1.29 10
+l Carreira9 paragem195 paragem168 1.31 4
+l Carreira9 paragem168 paragem72 1.54 3
+l Carreira9 paragem72 paragem86 1.77 7
+l Carreira9 paragem86 paragem11 1.47 2
+l Carreira9 paragem11 paragem50 1.41 3
+l Carreira9 paragem50 paragem151 0.32 4
+l Carreira9 paragem151 paragem29 0.11 9
+l Carreira9 paragem29 paragem175 0.56 10
+l Carreira9 paragem175 paragem145 1.31 1
+l Carreira9 paragem145 paragem96 1.20 6
+l Carreira9 paragem96 paragem74 1.96 10
+l Carreira9 paragem74 paragem23 0.55 3
+l Carreira10 paragem57 paragem187 1.21 5
+l Carreira10 paragem187 paragem125 1.60 1
+l Carreira10 paragem125 paragem116 0.30 2
+l Carreira10 paragem116 paragem97 1.68 7
+l Carreira10 paragem97 paragem104 0.17 7
+l Carreira10 paragem104 paragem119 0.77 9
+l Carreira10 paragem119 paragem56 1.89 4
+l Carreira10 paragem56 paragem180 1.96 3
+l Carreira10 paragem180 paragem122 0.01 2
+l Carreira10 paragem122 paragem163 1.60 7
+l Carreira10 paragem163 paragem196 0.56 5
+l Carreira10 paragem196 paragem195 0.66 5
+l Carreira10 paragem195 paragem137 0.95 8
+l Carreira10 paragem137 paragem13 0.16 4
+l Carreira10 paragem13 paragem86 1.50 2
+l Carreira10 paragem86 paragem55 1.29 4
+l Carreira10 paragem55 paragem38 0.09 8
+l Carreira10 paragem38 paragem152 0.55 3
+l Carreira10 paragem152 paragem19 0.90 1
+l Carreira10 paragem19 paragem167 0.13 4
+l Carreira10 paragem167 paragem43 1.10 7
+l Carreira10 paragem43 paragem96 0.09 6
+l Carreira10 paragem96 paragem75 1.63 3
+l Carreira10 paragem75 paragem178 0.31 2
+l Carreira10 paragem178 paragem57 0.67 9
+l Carreira11 paragem12 paragem133 1.66 1
+l Carreira11 paragem133 paragem51 1.70 5
+l Carreira11 paragem51 paragem177 0.53 4
+l Carreira11 paragem177 paragem171 1.86 10
+l Carreira11 paragem171 paragem77 0.67 9
+l Carreira11 paragem77 paragem93 1.49 6
+l Carreira11 paragem93 paragem12 1.96 8
+l Carreira12 paragem134 paragem57 1.10 7
+l Carreira12 paragem57 paragem51 1.81 7
+l Carreira12 paragem51 paragem54 0.07 1
+l Carreira12 paragem54 paragem19 0.46 10
+l Carreira12 paragem19 paragem7 0.81 9
+l Carreira12 paragem7 paragem181 0.50 3
+l Carreira12 paragem181 paragem48 1.87 2
+l Carreira12 paragem48 paragem31 1.75 9
+l Carreira12 paragem31 paragem122 0.31 5
+l Carreira12 paragem122 paragem134 1.68 1
+l Carreira13 paragem174 paragem57 0.40 5
+l Carreira13 paragem57 paragem51 1.59 8
+l Carreira13 paragem51 paragem34 0.29 7
+l Carreira13 paragem34 paragem28 1.17 10
+l Carreira13 paragem28 paragem131 0.95 8
+l Carreira13 paragem131 paragem153 0.90 2
+l Carreira13 paragem153 paragem158 1.73 5
+l Carreira13 paragem158 paragem58 0.33 9
+l Carreira13 paragem58 paragem122 1.97 4
+l Carreira13 paragem122 paragem152 1.05 3
+l Carreira13 paragem152 paragem27 0.01 5
+l Carreira13 paragem27 paragem156 1.58 6
+l Carreira13 paragem156 paragem125 0.90 4
+l Carreira13 paragem125 paragem43 0.72 2
+l Carreira13 paragem43 paragem54 0.30 4
+l Carreira13 paragem54 paragem20 0.55 8
+l Carreira13 paragem20 paragem149 1.43 4
+l Carreira13 paragem149 paragem100 1.14 4
+l Carreira13 paragem100 paragem174 1.78 5
+l Carreira14 paragem73 paragem39 0.62 6
+l Carreira14 paragem39 paragem59 1.60 9
+l Carreira14 paragem59 paragem157 0.24 5
+l Carreira14 paragem157 paragem105 1.20 1
+l Carreira14 paragem105 paragem139 1.57 2
+l Carreira14 paragem139 paragem153 1.31 4
+l Carreira14 paragem153 paragem180 1.69 4
+l Carreira14 paragem180 paragem193 0.56 10
+l Carreira14 paragem193 paragem155 1.93 4
+l Carreira14 paragem155 paragem94 0.52 2
+l Carreira14 paragem94 paragem16 1.63 1
+l Carreira14 paragem16 paragem58 1.26 10
+l Carreira14 paragem58 paragem125 0.13 4
+l Carreira14 paragem125 paragem41 0.31 3
+l Carreira14 paragem41 paragem73 0.53 4
+l Carreira15 paragem174 paragem39 1.20 2
+l Carreira15 paragem39 paragem32 0.91 3
+l Carreira15 paragem32 paragem136 0.61 1
+l Carreira15 paragem136 paragem97 0.58 5
+l Carreira15 paragem97 paragem139 0.65 4
+l Carreira15 paragem139 paragem153 1.66 9
+l Carreira15 paragem153 paragem98 1.85 5
+l Carreira15 paragem98 paragem46 0.21 9
+l Carreira15 paragem46 paragem91 0.62 8
+l Carreira15 paragem91 paragem133 1.69 4
+l Carreira15 paragem133 paragem194 1.99 2
+l Carreira15 paragem194 paragem174 0.57 7
+p
+p paragem48
+p paragem2
+p paragem23
+p paragem64
+p paragem11
+p paragem52
+p paragem129
+p paragem47
+p paragem20
+p paragem136
+p paragem63
+p paragem80
+p paragem13
+p paragem49
+p paragem15
+p paragem27
+p paragem127
+p paragem7
+p paragem19
+p paragem101
+p paragem165
+p paragem50
+p paragem131
+p paragem46
+p paragem82
+p paragem3
+p paragem39
+p paragem169
+p paragem18
+p paragem100
+p paragem180
+p paragem117
+p paragem148
+p paragem16
+p paragem85
+p paragem59
+p paragem40
+p paragem38
+p paragem160
+p paragem30
+p paragem106
+p paragem26
+p paragem88
+p paragem120
+p paragem77
+p paragem9
+p paragem193
+p paragem177
+p paragem14
+p paragem22
+p paragem25
+p paragem105
+p paragem53
+p paragem69
+p paragem91
+p paragem121
+p paragem170
+p paragem58
+p paragem183
+p paragem60
+p paragem187
+p paragem24
+p paragem116
+p paragem154
+p paragem196
+p paragem123
+p paragem4
+p paragem124
+p paragem151
+p paragem132
+p paragem200
+p paragem54
+p paragem161
+p paragem197
+p paragem162
+p paragem190
+p paragem139
+p paragem78
+p paragem153
+p paragem41
+p paragem138
+p paragem159
+p paragem102
+p paragem111
+p paragem10
+p paragem125
+p paragem33
+p paragem21
+p paragem143
+p paragem90
+p paragem92
+p paragem34
+p paragem83
+p paragem110
+p paragem95
+p paragem96
+p paragem6
+p paragem137
+p paragem184
+p paragem44
+p paragem32
+p paragem156
+p paragem84
+p paragem198
+p paragem176
+p paragem108
+p paragem107
+p paragem179
+p paragem109
+p paragem94
+p paragem73
+p paragem112
+p paragem167
+p paragem114
+p paragem134
+p paragem158
+p paragem86
+p paragem43
+p paragem175
+p paragem65
+p paragem122
+p paragem37
+p paragem66
+p paragem28
+p paragem144
+p paragem119
+p paragem1
+p paragem128
+p paragem172
+p paragem152
+p paragem42
+p paragem67
+p paragem133
+p paragem29
+p paragem62
+p paragem68
+p paragem195
+p paragem135
+p paragem5
+p paragem147
+p paragem141
+p paragem142
+p paragem185
+p paragem194
+p paragem173
+p paragem146
+p paragem79
+p paragem189
+p paragem181
+p paragem186
+p paragem164
+p paragem118
+p paragem188
+p paragem149
+p paragem199
+p paragem8
+p paragem51
+p paragem31
+p paragem71
+p paragem115
+p paragem70
+p paragem75
+p paragem163
+p paragem104
+p paragem140
+p paragem166
+p paragem97
+p paragem168
+p paragem36
+p paragem57
+p paragem171
+p paragem61
+p paragem74
+p paragem56
+p paragem35
+p paragem98
+p paragem87
+p paragem178
+p paragem72
+p paragem81
+p paragem99
+p paragem174
+p paragem12
+p paragem45
+p paragem93
+p paragem17
+p paragem130
+p paragem182
+p paragem192
+p paragem76
+p paragem191
+p paragem55
+p paragem103
+p paragem155
+p paragem150
+p paragem113
+p paragem145
+p paragem89
+p paragem126
+p paragem157
+c
+c Carreira1
+c Carreira2
+c Carreira3
+c Carreira4
+c Carreira5
+c Carreira6
+c Carreira7
+c Carreira8
+c Carreira9
+c Carreira10
+c Carreira11
+c Carreira12
+c Carreira13
+c Carreira14
+c Carreira15
+i
+q

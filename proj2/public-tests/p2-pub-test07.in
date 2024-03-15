@@ -1,0 +1,10 @@
+p A 1 2
+p B 3 4
+p C 4 5
+c X
+l X A B 0.1 0.2
+l X B C 0.1 0.2
+c X
+e A
+c X
+q

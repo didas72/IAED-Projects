@@ -1,0 +1,8 @@
+c abc
+p A 1 2
+p B 2 3
+p C 3 4
+p D 4 5
+l abc A B 0.2 3
+l abc C D 0.2 3
+q

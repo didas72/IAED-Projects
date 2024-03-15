@@ -1,0 +1,121 @@
+p
+c
+l
+i
+p "p espaco" -1.3 3.4
+p "p  tab" 9 2.3
+p "Praça da Liberdade" -8.613013 41.145741
+p "Avenida da Boavista" 41.158697 -8.656056
+p "Praia de Matosinhos" -8.686788 41.182499
+p "Mercado do Bolhão" -8.607926 41.148401
+p "Torre dos Clérigos" -8.615919 41.145815
+p "Rua Santa Catarina" -8.606764 41.150840
+p "Igreja do Carmo" -8.615270 41.146813
+p "Estádio do Dragão" 41.162686 -8.585679
+p "Ribeira do Porto" -8.618913 41.140679
+p "Serralves" -8.662290 41.159817
+p "Estação de São Bento" -8.544470 41.145992
+p "Estação de Campanhã" 41.146130 -8.575963
+p "Palácio de Cristal" -8.632965 41.147109
+p "Mosteiro da Serra do Pilar" -8.611949 41.136924
+p "Jardim Botânico" -8.641743 41.177369
+p "Fundação de Serralves" -8.659535 41.159285
+p "Jardins do Palácio de Cristal" -8.631834 41.148348
+p "Universidade do Porto" -8.610308 41.178553
+p "Rua das Flores" -8.614157 41.143394
+p "Museu de Serralves" -8.659166 41.159063
+p "Avenida dos Aliados" -8.611326 41.147490
+p "Ponte da Arrábida" -8.672059 41.135427
+p "Casa da Música" -8.626937 41.158184
+p "Catedral do Porto" -8.611501 41.143249
+p "Teatro Nacional São João" -8.610385 41.142226
+p "Museu Nacional Soares dos Reis" -8.621188 41.147360
+p "Palácio da Bolsa" -8.616101 41.141183
+p "Rua de Cedofeita" -8.613926 41.153067
+p "Igreja de São Francisco" -8.614514 41.140879
+p "Igreja de São Francisco" 0 0
+c Rodoviária
+c Expresso
+c Sul
+c Rede
+c Verde
+c Dourado
+c Amarelo
+c Azul
+c Vermelho
+c Prata
+p
+c
+l Rodoviária "Praça da Liberdade" "Avenida da Boavista" -1 -1
+l Rodoviária "Praça da Liberdade" "Avenida da Boavista" 1 1
+l Rodoviária "Praia de Matosinhos" "Praça da Liberdade" 2 0.5
+l Rodoviária "Avenida da Boavista" "Mercado do Bolhão" 1 6.1
+l Rodoviária "Rua Santa Catarina" "Praia de Matosinhos" 3 5.2
+l Rodoviária "Mercado do Bolhão" "Igreja do Carmo" 4 4.3
+l Rodoviária "Igreja do Carmo" "Praça da Liberdade" 5 2.4
+l Expresso "Igreja de São Francisco" "Rua de Cedofeita" 1 1
+l Expresso "Rua de Cedofeita" "Museu Nacional Soares dos Reis" 1 1
+l Expresso "Museu Nacional Soares dos Reis" "Teatro Nacional São João" 1 1
+l Expresso "Teatro Nacional São João" "Catedral do Porto" 1 1
+l Expresso "Catedral do Porto" "Casa da Música" 1 1
+l Expresso "Casa da Música" "Ponte da Arrábida" 1 1
+l Sul "Ponte da Arrábida" "Casa da Música" 1 1
+l Sul "Catedral do Porto" "Ponte da Arrábida" 1 1
+l Sul "Teatro Nacional São João" "Catedral do Porto" 1 1
+l Sul "Museu Nacional Soares dos Reis" "Teatro Nacional São João" 1 1
+l Sul "Rua de Cedofeita" "Museu Nacional Soares dos Reis" 1 1
+l Sul "Igreja de São Francisco" "Rua de Cedofeita" 1 1
+l Re paragem paragem 1 1
+l Rede paragem1 paragem2 1 1
+l Rede "paragem espaco" paragem 1 1
+l Rede paragem "paragem  tab" 1 1
+l Rede "paragem espaco" "paragem tab" -4 -2
+l Rede "paragem espaco" "paragem tab" 0 -2
+l Rede "paragem espaco" "paragem tab" -4 0
+l Verde
+p paragem_nao_existe
+p "Praça da Liberdade"
+p "Avenida da Boavista"
+p "Praia de Matosinhos"
+p "Mercado do Bolhão"
+p "Torre dos Clérigos"
+p "Rua Santa Catarina"
+p "Igreja do Carmo"
+p "Estádio do Dragão"
+p "Ribeira do Porto"
+p "Serralves"
+p "Estação de São Bento"
+p "Estação de Campanhã"
+p "Palácio de Cristal"
+p "Mosteiro da Serra do Pilar"
+p "Jardim Botânico"
+p "Fundação de Serralves"
+p "Jardins do Palácio de Cristal"
+p "Universidade do Porto"
+p "Rua das Flores"
+p "Museu de Serralves"
+p "Avenida dos Aliados"
+p "Ponte da Arrábida"
+p "Casa da Música"
+p "Catedral do Porto"
+p "Teatro Nacional São João"
+p "Museu Nacional Soares dos Reis"
+p "Palácio da Bolsa"
+p "Rua de Cedofeita"
+p "Igreja de São Francisco"
+c Rodoviária
+c Expresso
+c Sul
+c Rede
+c Verde
+c Dourado
+c Amarelo
+c Azul
+c Vermelho
+c Prata
+i
+c Prata i
+c Prata in
+c Prata inv
+c Prata inverXo
+q

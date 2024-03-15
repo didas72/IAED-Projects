@@ -1,0 +1,8 @@
+p Paragem1 2 4
+p "Paragem 2" -3.4 1.4
+p "Praça Espanha" 1 2.3
+p
+c Carreira1
+c Carreira2
+c
+q

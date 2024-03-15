@@ -1,0 +1,10 @@
+p Paragem1 2 4
+p "Paragem 2" -3.4 1.4
+p "Praça Espanha" 1 2.3
+p Paragem4 4 5
+c Carreira1
+l Carreira1 Paragem1 "Praça Espanha" 0.5 2
+l Carreira1 "Praça Espanha" "Paragem 2" 0.8 3
+l Carreira1 "Paragem 2" Paragem4 0.9 3
+c Carreira1 inv
+q

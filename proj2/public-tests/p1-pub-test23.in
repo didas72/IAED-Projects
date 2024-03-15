@@ -1,0 +1,121 @@
+p
+c
+l
+i
+p "p espaco" -1.3 3.4
+p "p  tab" 9 2.3
+p "Pra�a da Liberdade" -8.613013 41.145741
+p "Avenida da Boavista" 41.158697 -8.656056
+p "Praia de Matosinhos" -8.686788 41.182499
+p "Mercado do Bolh�o" -8.607926 41.148401
+p "Torre dos Cl�rigos" -8.615919 41.145815
+p "Rua Santa Catarina" -8.606764 41.150840
+p "Igreja do Carmo" -8.615270 41.146813
+p "Est�dio do Drag�o" 41.162686 -8.585679
+p "Ribeira do Porto" -8.618913 41.140679
+p "Serralves" -8.662290 41.159817
+p "Esta��o de S�o Bento" -8.544470 41.145992
+p "Esta��o de Campanh�" 41.146130 -8.575963
+p "Pal�cio de Cristal" -8.632965 41.147109
+p "Mosteiro da Serra do Pilar" -8.611949 41.136924
+p "Jardim Bot�nico" -8.641743 41.177369
+p "Funda��o de Serralves" -8.659535 41.159285
+p "Jardins do Pal�cio de Cristal" -8.631834 41.148348
+p "Universidade do Porto" -8.610308 41.178553
+p "Rua das Flores" -8.614157 41.143394
+p "Museu de Serralves" -8.659166 41.159063
+p "Avenida dos Aliados" -8.611326 41.147490
+p "Ponte da Arr�bida" -8.672059 41.135427
+p "Casa da M�sica" -8.626937 41.158184
+p "Catedral do Porto" -8.611501 41.143249
+p "Teatro Nacional S�o Jo�o" -8.610385 41.142226
+p "Museu Nacional Soares dos Reis" -8.621188 41.147360
+p "Pal�cio da Bolsa" -8.616101 41.141183
+p "Rua de Cedofeita" -8.613926 41.153067
+p "Igreja de S�o Francisco" -8.614514 41.140879
+p "Igreja de S�o Francisco" 0 0
+c Rodovi�ria
+c Expresso
+c Sul
+c Rede
+c Verde
+c Dourado
+c Amarelo
+c Azul
+c Vermelho
+c Prata
+p
+c
+l Rodovi�ria "Pra�a da Liberdade" "Avenida da Boavista" -1 -1
+l Rodovi�ria "Pra�a da Liberdade" "Avenida da Boavista" 1 1
+l Rodovi�ria "Praia de Matosinhos" "Pra�a da Liberdade" 2 0.5
+l Rodovi�ria "Avenida da Boavista" "Mercado do Bolh�o" 1 6.1
+l Rodovi�ria "Rua Santa Catarina" "Praia de Matosinhos" 3 5.2
+l Rodovi�ria "Mercado do Bolh�o" "Igreja do Carmo" 4 4.3
+l Rodovi�ria "Igreja do Carmo" "Pra�a da Liberdade" 5 2.4
+l Expresso "Igreja de S�o Francisco" "Rua de Cedofeita" 1 1
+l Expresso "Rua de Cedofeita" "Museu Nacional Soares dos Reis" 1 1
+l Expresso "Museu Nacional Soares dos Reis" "Teatro Nacional S�o Jo�o" 1 1
+l Expresso "Teatro Nacional S�o Jo�o" "Catedral do Porto" 1 1
+l Expresso "Catedral do Porto" "Casa da M�sica" 1 1
+l Expresso "Casa da M�sica" "Ponte da Arr�bida" 1 1
+l Sul "Ponte da Arr�bida" "Casa da M�sica" 1 1
+l Sul "Catedral do Porto" "Ponte da Arr�bida" 1 1
+l Sul "Teatro Nacional S�o Jo�o" "Catedral do Porto" 1 1
+l Sul "Museu Nacional Soares dos Reis" "Teatro Nacional S�o Jo�o" 1 1
+l Sul "Rua de Cedofeita" "Museu Nacional Soares dos Reis" 1 1
+l Sul "Igreja de S�o Francisco" "Rua de Cedofeita" 1 1
+l Re paragem paragem 1 1
+l Rede paragem1 paragem2 1 1
+l Rede "paragem espaco" paragem 1 1
+l Rede paragem "paragem  tab" 1 1
+l Rede "paragem espaco" "paragem tab" -4 -2
+l Rede "paragem espaco" "paragem tab" 0 -2
+l Rede "paragem espaco" "paragem tab" -4 0
+l Verde
+p paragem_nao_existe
+p "Pra�a da Liberdade"
+p "Avenida da Boavista"
+p "Praia de Matosinhos"
+p "Mercado do Bolh�o"
+p "Torre dos Cl�rigos"
+p "Rua Santa Catarina"
+p "Igreja do Carmo"
+p "Est�dio do Drag�o"
+p "Ribeira do Porto"
+p "Serralves"
+p "Esta��o de S�o Bento"
+p "Esta��o de Campanh�"
+p "Pal�cio de Cristal"
+p "Mosteiro da Serra do Pilar"
+p "Jardim Bot�nico"
+p "Funda��o de Serralves"
+p "Jardins do Pal�cio de Cristal"
+p "Universidade do Porto"
+p "Rua das Flores"
+p "Museu de Serralves"
+p "Avenida dos Aliados"
+p "Ponte da Arr�bida"
+p "Casa da M�sica"
+p "Catedral do Porto"
+p "Teatro Nacional S�o Jo�o"
+p "Museu Nacional Soares dos Reis"
+p "Pal�cio da Bolsa"
+p "Rua de Cedofeita"
+p "Igreja de S�o Francisco"
+c Rodovi�ria
+c Expresso
+c Sul
+c Rede
+c Verde
+c Dourado
+c Amarelo
+c Azul
+c Vermelho
+c Prata
+i
+c Prata i
+c Prata in
+c Prata inv
+c Prata inverXo
+q

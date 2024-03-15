@@ -1,0 +1,8 @@
+Paragem1:   2.000000000000   4.000000000000 0
+Paragem 2:  -3.400000000000   1.400000000000 0
+Praça Espanha:   1.000000000000   2.300000000000 0
+Paragem4:   4.000000000000   5.000000000000 0
+negative cost or duration.
+Paragem1, Praça Espanha, Paragem 2, Paragem4
+Carreira1 Paragem1 Paragem4 4 2.20 8.00
+Carreira2 0 0.00 0.00

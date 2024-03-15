@@ -1,0 +1,93 @@
+Igreja de São Francisco: stop already exists.
+p espaco:  -1.300000000000   3.400000000000 0
+p  tab:   9.000000000000   2.300000000000 0
+Praça da Liberdade:  -8.613013000000  41.145741000000 0
+Avenida da Boavista:  41.158697000000  -8.656056000000 0
+Praia de Matosinhos:  -8.686788000000  41.182499000000 0
+Mercado do Bolhão:  -8.607926000000  41.148401000000 0
+Torre dos Clérigos:  -8.615919000000  41.145815000000 0
+Rua Santa Catarina:  -8.606764000000  41.150840000000 0
+Igreja do Carmo:  -8.615270000000  41.146813000000 0
+Estádio do Dragão:  41.162686000000  -8.585679000000 0
+Ribeira do Porto:  -8.618913000000  41.140679000000 0
+Serralves:  -8.662290000000  41.159817000000 0
+Estação de São Bento:  -8.544470000000  41.145992000000 0
+Estação de Campanhã:  41.146130000000  -8.575963000000 0
+Palácio de Cristal:  -8.632965000000  41.147109000000 0
+Mosteiro da Serra do Pilar:  -8.611949000000  41.136924000000 0
+Jardim Botânico:  -8.641743000000  41.177369000000 0
+Fundação de Serralves:  -8.659535000000  41.159285000000 0
+Jardins do Palácio de Cristal:  -8.631834000000  41.148348000000 0
+Universidade do Porto:  -8.610308000000  41.178553000000 0
+Rua das Flores:  -8.614157000000  41.143394000000 0
+Museu de Serralves:  -8.659166000000  41.159063000000 0
+Avenida dos Aliados:  -8.611326000000  41.147490000000 0
+Ponte da Arrábida:  -8.672059000000  41.135427000000 0
+Casa da Música:  -8.626937000000  41.158184000000 0
+Catedral do Porto:  -8.611501000000  41.143249000000 0
+Teatro Nacional São João:  -8.610385000000  41.142226000000 0
+Museu Nacional Soares dos Reis:  -8.621188000000  41.147360000000 0
+Palácio da Bolsa:  -8.616101000000  41.141183000000 0
+Rua de Cedofeita:  -8.613926000000  41.153067000000 0
+Igreja de São Francisco:  -8.614514000000  41.140879000000 0
+Rodoviária 0 0.00 0.00
+Expresso 0 0.00 0.00
+Sul 0 0.00 0.00
+Rede 0 0.00 0.00
+Verde 0 0.00 0.00
+Dourado 0 0.00 0.00
+Amarelo 0 0.00 0.00
+Azul 0 0.00 0.00
+Vermelho 0 0.00 0.00
+Prata 0 0.00 0.00
+negative cost or duration.
+Re: no such line.
+paragem1: no such stop.
+paragem espaco: no such stop.
+paragem: no such stop.
+paragem espaco: no such stop.
+paragem espaco: no such stop.
+paragem espaco: no such stop.
+paragem_nao_existe: no such stop.
+ -8.613013000000  41.145741000000
+ 41.158697000000  -8.656056000000
+ -8.686788000000  41.182499000000
+ -8.607926000000  41.148401000000
+ -8.615919000000  41.145815000000
+ -8.606764000000  41.150840000000
+ -8.615270000000  41.146813000000
+ 41.162686000000  -8.585679000000
+ -8.618913000000  41.140679000000
+ -8.662290000000  41.159817000000
+ -8.544470000000  41.145992000000
+ 41.146130000000  -8.575963000000
+ -8.632965000000  41.147109000000
+ -8.611949000000  41.136924000000
+ -8.641743000000  41.177369000000
+ -8.659535000000  41.159285000000
+ -8.631834000000  41.148348000000
+ -8.610308000000  41.178553000000
+ -8.614157000000  41.143394000000
+ -8.659166000000  41.159063000000
+ -8.611326000000  41.147490000000
+ -8.672059000000  41.135427000000
+ -8.626937000000  41.158184000000
+ -8.611501000000  41.143249000000
+ -8.610385000000  41.142226000000
+ -8.621188000000  41.147360000000
+ -8.616101000000  41.141183000000
+ -8.613926000000  41.153067000000
+ -8.614514000000  41.140879000000
+Rua Santa Catarina, Praia de Matosinhos, Praça da Liberdade, Avenida da Boavista, Mercado do Bolhão, Igreja do Carmo, Praça da Liberdade
+Igreja de São Francisco, Rua de Cedofeita, Museu Nacional Soares dos Reis, Teatro Nacional São João, Catedral do Porto, Casa da Música, Ponte da Arrábida
+Igreja de São Francisco, Rua de Cedofeita, Museu Nacional Soares dos Reis, Teatro Nacional São João, Catedral do Porto, Ponte da Arrábida, Casa da Música
+Ponte da Arrábida 2: Expresso Sul
+Casa da Música 2: Expresso Sul
+Catedral do Porto 2: Expresso Sul
+Teatro Nacional São João 2: Expresso Sul
+Museu Nacional Soares dos Reis 2: Expresso Sul
+Rua de Cedofeita 2: Expresso Sul
+Igreja de São Francisco 2: Expresso Sul
+incorrect sort option.
+incorrect sort option.
+incorrect sort option.

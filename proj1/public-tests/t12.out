@@ -1,0 +1,9 @@
+Paragem1:   2.000000000000   4.000000000000 0
+Paragem2:  -3.400000000000   1.400000000000 0
+Paragem3:   1.000000000000   2.300000000000 0
+Paragem4:   3.000000000000   3.300000000000 0
+Paragem2, Paragem3
+Paragem1, Paragem2, Paragem3
+Paragem1 2: Carreira1 Carreira3
+Paragem2 2: Carreira1 Carreira2
+Paragem3 2: Carreira1 Carreira2
