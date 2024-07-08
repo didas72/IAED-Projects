@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 
 	#ifdef USE_ALLOC_CHECK
 	atexit(&cleanup_alloc_checks);
+	atexit(&list_all_entries);
 	atexit(&report_alloc_checks);
 	#endif
 
