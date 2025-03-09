@@ -1,5 +1,5 @@
 CC=gcc
-C_FLAGS=-g -Wall -Wextra -Wno-unused-result
+C_FLAGS=-g -DDEBUG -Wall -Wextra -Wno-unused-result
 #C_FLAGS=-O3 -Wall -Wextra -Wno-unused-result
 VAL_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes -s
 

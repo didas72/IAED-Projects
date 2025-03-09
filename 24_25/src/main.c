@@ -1,9 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 
-size_t read_cmd(char *buff, size_t len, char **parts, size_t count)
-{
-	(void)count; //TODO: Not
+#define CMD_MAX 65535
+#define ARG_MAX 16384
+
+size_t read_cmd(char *buff, size_t len, char **parts)
+{ //Pray we dont overflow parts
 	fgets(buff, len, stdin);
 
 	size_t i = ~(size_t)0;
@@ -56,15 +60,44 @@ int main(int argc, char *argv[])
 	(void)argc;
 	(void)argv;
 
-	printf("Hey\n");
+	char buff[CMD_MAX];
+	char *parts[ARG_MAX];
 
-	char buff[1024];
-	char *parts[16];
-	size_t partc = read_cmd(buff, 1024, parts, 16);
-
-	printf("Got %lu parts\n", partc);
-	for (size_t i = 0; i < partc; ++i)
-		printf("Part %lu is '%s'\n", i, parts[i]);
+	char should_run = 1;
+	while (should_run)
+	{
+		size_t partc = read_cmd(buff, CMD_MAX, parts);
+#ifdef DEBUG
+		if (!partc)
+		{
+			should_run = 0;
+			continue;
+		}
+		if (!parts[0][0] || parts[0][1])
+		{
+			fprintf(stderr, "First part of command must be one character long\n");
+			abort();
+		}
+#endif
+		
+		switch (parts[0][0])
+		{
+			case 'q':
+				should_run = 0;
+				break;
+			
+			case 'c':
+			case 'l':
+			case 'a':
+			case 'r':
+			case 'd':
+			case 'u':
+			case 't':
+				fprintf(stderr, "Not implemented\n");
+				should_run = 0;
+				break;
+		}
+	}
 
 	return 0;
 }
