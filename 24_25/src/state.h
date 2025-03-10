@@ -25,30 +25,8 @@ typedef struct state_t
 	//TODO: Error translation table
 } state_t;
 
-state_t *state_init()
-{
-	state_t *state = malloc(sizeof(state_t));
+state_t *state_init();
 
-	if (!state)
-		return NULL;
-
-	state->current_date = 0; //Trust
-	state->vaccines = hashtable_create(, ); //TODO: Hasher and comprarer for batch_t
-	state->inoculations = vector_create();
-	state->batch_to_inoc = hashtable_create(, ); //TODO: Hasher and comparer for batch_t
-	state->user_to_inoc = hashtable_create(hash_str, compare_str);
-
-	return state;
-}
-
-void state_destroy(state_t *state)
-{
-	hashtable_destroy_free(state->vaccines, NULL, free);
-	vector_destroy_free(state->inoculations, ); //TODO: Freer for inoculation_t
-	hashtable_destroy_free(state->batch_to_inoc, NULL, vector_destroy);
-	hashtable_destroy_free(state->user_to_inoc, free, vector_destroy);
-
-	free(state);
-}
+void state_destroy(state_t *state);
 
 #endif

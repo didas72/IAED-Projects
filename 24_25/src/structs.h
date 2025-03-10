@@ -1,6 +1,8 @@
 #ifndef STRUCTS_H_
 #define STRUCTS_H_
 
+#include <stddef.h>
+
 #define BATCH_LEN 10
 
 #define VACC_NAME_MAX 50
@@ -20,7 +22,7 @@ typedef struct vaccine_t
 {
 	batch_t batch;
 	date_t expiration_date;
-	//Number of vaccines produced in batch (readonly)
+	//Number of vaccines left
 	int count;
 	char name[VACC_NAME_MAX + 1];
 } vaccine_t;
@@ -34,11 +36,19 @@ typedef struct inoculation_t
 
 
 
-batch_t parse_batch(char *str, batch_t *batch);
+char parse_batch(char *str, batch_t *batch);
 void print_batch(batch_t batch);
+size_t batch_hasher(void *batch);
+int batch_comprarer(void *first, void *second);
 
 date_t parse_date(char *str);
 void print_date(date_t date);
+
+vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int count, char *name);
+#define vaccine_destroy(vaccine) do { free(vaccine); } while (0)
+
+inoculation_t *inoculation_create(batch_t batch, date_t date, char *name);
+void inoculation_destroy(inoculation_t *inoc);
 
 void print_vaccine(vaccine_t *vaccine, int times_applied);
 
