@@ -44,6 +44,8 @@ int batch_comprarer(void *first, void *second);
 date_t parse_date(char *str);
 void print_date(date_t date);
 
+char invalid_vaccine_name(char *name);
+
 vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int count, char *name);
 #define vaccine_destroy(vaccine) do { free(vaccine); } while (0)
 

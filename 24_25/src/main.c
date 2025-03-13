@@ -3,6 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "state.h"
+#include "commands.h"
+
 #define CMD_MAX 65535
 #define ARG_MAX 16384
 
@@ -63,6 +66,8 @@ int main(int argc, char *argv[])
 	char buff[CMD_MAX];
 	char *parts[ARG_MAX];
 
+	state_t *state = state_create();
+
 	char should_run = 1;
 	while (should_run)
 	{
@@ -80,13 +85,20 @@ int main(int argc, char *argv[])
 		}
 #endif
 		
-		switch (parts[0][0])
+		char cmd = parts[0][0];
+		char **cmd_argv = &parts[1];
+		size_t cmd_argc = partc - 1;
+
+		switch (cmd)
 		{
 			case 'q':
 				should_run = 0;
 				break;
 			
 			case 'c':
+				cmd_create(state, cmd_argv, cmd_argc);
+				break;
+
 			case 'l':
 			case 'a':
 			case 'r':
@@ -98,6 +110,8 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
+
+	state_destroy(state);
 
 	return 0;
 }

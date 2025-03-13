@@ -8,6 +8,8 @@
 #define DAYS_IN_YEAR 365
 #define MONTHS_IN_YEAR 12
 
+#define VACCINE_NAME_MAX 50
+
 
 char parse_batch(char *str, batch_t *batch)
 {
@@ -81,7 +83,16 @@ void print_date(date_t date)
 	printf("%02d-%02d-%04d", day + 1, month + 1, year + MIN_YEAR);
 }
 
-//TODO: Vaccine name validator
+char invalid_vaccine_name(char *name)
+{
+	if (strlen(name) > VACC_NAME_MAX)
+		return 1;
+	
+	if (strpbrk(name, " \t\n") != NULL)
+		return 1;
+
+	return 0;
+}
 
 vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int count, char *name)
 {

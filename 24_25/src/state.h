@@ -8,8 +8,12 @@
 #include <sus/hashes.h>
 
 #include "structs.h"
+#include "error_utils.h"
 
 #define MAX_VACCINES 1000
+
+#define LOCALE_EN 0
+#define LOCALE_PT 1
 
 typedef struct state_t
 {
@@ -22,10 +26,10 @@ typedef struct state_t
 	//hashtable_t<char*, vector_t*<inoculation_t*>> - owns values, owns keys
 	hashtable_t *user_to_inoc;
 	date_t current_date;
-	//TODO: Error translation table
+	char *error_locales[ERR_MAX];
 } state_t;
 
-state_t *state_init();
+state_t *state_create(int locale);
 
 void state_destroy(state_t *state);
 
