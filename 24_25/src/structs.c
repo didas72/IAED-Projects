@@ -15,24 +15,26 @@ char parse_batch(char *str, batch_t *batch)
 {
 	char *hex = "0123456789ABCDEF";
 	memset(batch, 0, sizeof(batch_t));
-	int i;
+	unsigned char i;
 
-	for (i = 0; i < 20 && str[i]; i++)
+	for (i = 0; i < (BATCH_LEN * 2) && str[i]; ++i)
 	{
 		char *chr = strchr(hex, str[i]);
 		if (!chr)
 			return 1;
 		int idx = chr - hex;
-		batch->data[i >> 1] |= idx << ((i & 1) << 2);
+		batch->data[i >> 1] |= idx << ((1 - (i & 1)) << 2);
 	}
 
-	return (i == 20 && str[20]) ? 1 : 0;
+	batch->data[BATCH_LEN] = i;
+
+	return str[i];
 }
 void print_batch(batch_t batch)
-{ //REVIEW: Print how much of it? Always 20 chars?
+{
 	char *hex = "0123456789ABCDEF";
-	for (int i = 0; i < 20; i++)
-		putchar(hex[batch.data[i >> 1] & (0x0F << ((i & 1) << 2))]);
+	for (int i = 0; i < batch.len; ++i)
+		putchar(hex[(batch.data[i >> 1] >> ((1 - (i & 1)) << 2)) & 0x0F]);
 }
 size_t batch_hasher(void *batch)
 {
@@ -47,24 +49,24 @@ int batch_comprarer(void *first, void *second)
 {
 	batch_t *a = first, *b = second;
 
-	for (int i = 0; i < BATCH_LEN; i++)
+	for (int i = 0; i < BATCH_LEN && i < a->len && i < b->len; i++)
 	{
 		if (a->data[i] == b->data[i]) continue;
-		return a->data[i] > b->data[i] ? 1 : -1;
+		return a->data[i] - b->data[i];
 	}
 
-	return 0;
+	return a->len - b->len;
 }
 
 date_t parse_date(char *str)
 {
-	int days_in_month[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-	int days_at_month[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+	int days_in_month[MONTHS_IN_YEAR] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	int days_at_month[MONTHS_IN_YEAR] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
 	int day, month, year;
 	sscanf(str, "%d%*c%d%*c%d", &day, &month, &year); //NOTE: Accepts any separator character, ignores failed scans
 
-	if (year < MIN_YEAR || month < 1 || month > 12 || day < 1 || day > days_in_month[month])
+	if (year < MIN_YEAR || month < 1 || month > MONTHS_IN_YEAR || day < 1 || day > days_in_month[month-1])
 		return DATE_NVAL;
 
 	return (date_t)(day-1) + days_at_month[month - 1] + (year - MIN_YEAR) * DAYS_IN_YEAR; //NOTE: Does not handle leap years

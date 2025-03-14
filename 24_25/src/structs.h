@@ -16,6 +16,7 @@ typedef long unsigned int date_t;
 typedef struct batch_t
 { //REVIEW: Sorting might not benefit from this format (reorder hex chars if needed?)
 	unsigned char data[BATCH_LEN];
+	unsigned char len;
 } batch_t;
 
 typedef struct vaccine_t

@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	char buff[CMD_MAX];
 	char *parts[ARG_MAX];
 
-	state_t *state = state_create();
+	state_t *state = state_create(LOCALE_EN);
 
 	char should_run = 1;
 	while (should_run)
@@ -100,6 +100,9 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'l':
+				cmd_list(state, cmd_argv, cmd_argc);
+				break;
+
 			case 'a':
 			case 'r':
 			case 'd':

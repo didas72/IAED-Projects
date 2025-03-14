@@ -4,5 +4,6 @@
 #include "state.h"
 
 void cmd_create(state_t *state, char **argv, size_t argc);
+void cmd_list(state_t *state, char **argv, size_t argc);
 
 #endif
