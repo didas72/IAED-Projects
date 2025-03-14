@@ -37,7 +37,18 @@ state_t *state_create(int locale)
 			break;
 
 		case LOCALE_PT:
-			abort();
+			state->error_locales[ERR_NO_MEMORY] = "sem memória";
+			state->error_locales[ERR_MAX_VACCINES] = "demasiadas vacinas";
+			state->error_locales[ERR_BATCH_DUP] = "número de lote duplicado";
+			state->error_locales[ERR_BATCH_NVAL] = "lote inválido";
+			state->error_locales[ERR_NAME_NVAL] = "nome inválido";
+			state->error_locales[ERR_DATE_NVAL] = "data inválida";
+			state->error_locales[ERR_COUNT_NVAL] = "quantidade inválida";
+			state->error_locales[ERR_NO_VACCINE] = "%s: vacina inexistente";
+			state->error_locales[ERR_DEPLETED] = "esgotado";
+			state->error_locales[ERR_VACCINATED] = "já vacinado";
+			state->error_locales[ERR_NO_BATCH] = "%s: lote inexistente";
+			state->error_locales[ERR_NO_USER] = "%s: utente inexistente";
 			break;
 
 		default:
@@ -53,7 +64,7 @@ state_t *state_create(int locale)
 void state_destroy(state_t *state)
 {
 	hashtable_destroy_free(state->vaccines, NULL, free);
-	vector_destroy_free(state->inoculations, (void (*) (void*))inoculation_destroy); //TODO: Freer for inoculation_t
+	vector_destroy_free(state->inoculations, (void (*) (void*))inoculation_destroy);
 	hashtable_destroy_free(state->batch_to_inoc, NULL, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
 	hashtable_destroy_free(state->user_to_inoc, free, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
 
