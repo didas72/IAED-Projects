@@ -4,6 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sus/vector.h>
+#include <sus/hashtable.h>
+#include <sus/hashes.h>
+#include <sus/sus.h>
+
+#include "structs.h"
 #include "error_utils.h"
 
 state_t *state_create(int locale)
@@ -15,6 +21,7 @@ state_t *state_create(int locale)
 
 	state->current_date = 0; //Trust
 	state->vaccines = hashtable_create(batch_hasher, batch_comprarer);
+	state->name_to_vaccine = hashtable_create(hash_str, compare_str);
 	state->inoculations = vector_create();
 	state->batch_to_inoc = hashtable_create(batch_hasher, batch_comprarer);
 	state->user_to_inoc = hashtable_create(hash_str, compare_str);
@@ -64,9 +71,71 @@ state_t *state_create(int locale)
 void state_destroy(state_t *state)
 {
 	hashtable_destroy_free(state->vaccines, NULL, free);
+	hashtable_destroy_free(state->name_to_vaccine, free, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
 	vector_destroy_free(state->inoculations, (void (*) (void*))inoculation_destroy);
 	hashtable_destroy_free(state->batch_to_inoc, NULL, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
 	hashtable_destroy_free(state->user_to_inoc, free, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
 
 	free(state);
+}
+
+void state_add_vaccine(state_t *state, vaccine_t *vaccine)
+{
+	hashtable_add(state->vaccines, &vaccine->batch, vaccine); //REVIEW: Maybe check return code (in case of failed alloc)
+
+	//vector_t<vaccine_t*>
+	vector_t *vaccines_with_name = hashtable_get(state->name_to_vaccine, vaccine->name);
+	if (vaccines_with_name == NULL)
+	{
+		vaccines_with_name = vector_create(); //REVIEW: Maybe check return code (in case of failed alloc)
+		char *name = strdup(vaccine->name);
+		hashtable_add(state->name_to_vaccine, name, vaccines_with_name); //REVIEW: Maybe check return code (in case of failed alloc)
+	}
+
+	vector_append(vaccines_with_name, vaccine); //REVIEW: Maybe check return code (in case of failed alloc)
+}
+
+
+static int available_vaccine_filter(void *vac, void *arg);
+static int oldest_vaccine_comparer(void *first, void *second);
+vaccine_t *state_get_vaccine(state_t *state, char *name)
+{
+	//vector_t<vaccine_t*>
+	vector_t *vaccines = hashtable_get(state->name_to_vaccine, name);
+
+	if (!vaccines)
+	{
+		ERR_ARG(ERR_NO_VACCINE, name);
+		return NULL;
+	}
+
+	//vector_t<vaccine_t*>
+	vector_t *available_vaccines = vector_get_all(vaccines, available_vaccine_filter, state);
+
+	if (available_vaccines->count == 0)
+	{
+		ERR_ARG(ERR_NO_VACCINE, name);
+		vector_destroy(available_vaccines);
+		return NULL;
+	}
+
+	vector_sort(available_vaccines, oldest_vaccine_comparer); //REVIEW: Check sort order
+	vaccine_t *vaccine = available_vaccines->data[0];
+
+	vector_destroy(available_vaccines);
+	return vaccine;
+}
+
+static int available_vaccine_filter(void *vac, void *arg)
+{
+	vaccine_t *vaccine = vac;
+	state_t *state = arg;
+
+	return vaccine->count > 0 && vaccine->expiration_date > state->current_date;
+}
+static int oldest_vaccine_comparer(void *first, void *second)
+{
+	vaccine_t *a = first, *b = second;
+
+	return a->expiration_date - b->expiration_date;
 }

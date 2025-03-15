@@ -62,7 +62,7 @@ void cmd_create(state_t *state, char **argv, size_t argc)
 	}
 
 	vaccine_t *vaccine = vaccine_create(batch, date, count, name);
-	hashtable_add(state->vaccines, &vaccine->batch, vaccine); //REVIEW: Maybe check return code (in case of failed alloc)
+	state_add_vaccine(state, vaccine);
 }
 
 static void list_all(state_t *state);
@@ -75,6 +75,46 @@ void cmd_list(state_t *state, char **argv, size_t argc)
 		list_selected(state, argv, argc);
 }
 
+void cmd_apply(state_t *state, char **argv, size_t argc)
+{
+#ifdef DEBUG
+	if (argc != 4)
+	{
+		fprintf(stderr, "Command 'a' requires exactly 2 arguments");
+		abort();
+	}
+#endif
+
+	char *user_name = argv[0];
+	char *vaccine_name = argv[1];
+
+	vaccine_t *vaccine = state_get_vaccine(state, vaccine_name);
+	if (!vaccine)
+		return;
+	
+	//TODO: abstract
+	//vector_t<inoculation_t*>
+	vector_t *inoculations = hashtable_get(state->user_to_inoc, user_name);
+	if (inoculations != NULL && inoculations->count != 0)
+	{
+		inoculation_t *inoc = inoculations->data[inoculations->count - 1];
+		if (inoc->date == state->current_date)
+		{
+			ERR(ERR_VACCINATED);
+			return;
+		}
+	}
+
+	//TODO: abstract
+	inoculation_t *inoculation = inoculation_create(vaccine->batch, state->current_date, user_name);
+	//TODO: Add to inoculations
+	//TODO: Add to batch_to_inoc
+	//TODO: Add to user_to_inoc
+
+	--vaccine->count;
+	print_batch(vaccine->batch);
+	putchar('\n');
+}
 
 
 static int vaccine_comparer(void *first, void *second)

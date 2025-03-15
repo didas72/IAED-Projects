@@ -5,7 +5,6 @@
 
 #include <sus/hashtable.h>
 #include <sus/vector.h>
-#include <sus/hashes.h>
 
 #include "structs.h"
 #include "error_utils.h"
@@ -19,6 +18,8 @@ typedef struct state_t
 {
 	//hashtable_t<batch_t*, vaccine_t*> - owns values, keys owned by values
 	hashtable_t *vaccines;
+	//hashtable_t<char*, vector_t<vaccine_t*>> - owns values and keys
+	hashtable_t *name_to_vaccine;
 	//vector_t<inoculation_t*> - owns values
 	vector_t *inoculations;
 	//hashtable_t<batch_t*, vector_t*<inoculation_t*>> - owns values, keys owned by values of vaccines
@@ -30,7 +31,9 @@ typedef struct state_t
 } state_t;
 
 state_t *state_create(int locale);
-
 void state_destroy(state_t *state);
+
+void state_add_vaccine(state_t *state, vaccine_t *vaccine);
+vaccine_t *state_get_vaccine(state_t *state, char *name);
 
 #endif
