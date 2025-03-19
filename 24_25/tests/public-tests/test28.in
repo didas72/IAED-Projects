@@ -1,0 +1,14 @@
+c CA12B5 04-08-2025 120 sarampo
+c 5A8B 08-08-2025 80 corona_virus
+c 1234 08-08-2025 80 vacina
+c A0C0 31-07-2025 210 papeira
+l
+r 5A8B
+l
+r CA12B5
+l
+r A0C0
+l
+r 1234
+l
+q
