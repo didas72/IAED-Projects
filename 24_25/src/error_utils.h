@@ -16,6 +16,6 @@
 #define ERR_MAX 12
 
 #define ERR(num) do { puts(state->error_locales[num]); } while (0)
-#define ERR_ARG(num, arg) do { printf("%s: %s\n", state->error_locales[num], arg); } while (0)
+#define ERR_ARG(num, arg) do { printf(state->error_locales[num], arg); putchar('\n'); } while (0)
 
 #endif

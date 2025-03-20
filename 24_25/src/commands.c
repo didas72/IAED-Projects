@@ -201,6 +201,12 @@ static void list_selected(state_t *state, char **argv, size_t argc)
 	{
 		//vector_t<vaccine_t *>
 		vector_t *matches = vector_get_all(vaccines, vaccine_filter, argv[i]);
+
+		if (matches->count == 0)
+		{
+			ERR_ARG(ERR_NO_VACCINE, argv[i]);
+		}
+
 		vector_sort(matches, vaccine_comparer); //REVIEW: Might be broken
 		for (size_t j = 0; j < matches->count; ++j)
 		{
