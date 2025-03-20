@@ -34,6 +34,8 @@ state_t *state_create(int locale);
 void state_destroy(state_t *state);
 
 void state_add_vaccine(state_t *state, vaccine_t *vaccine);
+void state_add_inoculation(state_t *state, inoculation_t *inoc);
+
 vaccine_t *state_get_vaccine(state_t *state, char *name);
 
 #endif

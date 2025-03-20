@@ -105,6 +105,7 @@ vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int count, char
 	vaccine->batch = batch;
 	vaccine->expiration_date = expiration_date;
 	vaccine->count = count;
+	vaccine->applied = 0;
 	strncpy(vaccine->name, name, VACC_NAME_MAX);
 	vaccine->name[VACC_NAME_MAX] = 0;
 
@@ -133,14 +134,14 @@ void inoculation_destroy(inoculation_t *inoc)
 	free(inoc);
 }
 
-void print_vaccine(vaccine_t *vaccine, int times_applied)
+void print_vaccine(vaccine_t *vaccine)
 {
 	fputs(vaccine->name, stdout);
 	putchar(' ');
 	print_batch(vaccine->batch);
 	putchar(' ');
 	print_date(vaccine->expiration_date);
-	printf(" %d %d", vaccine->count, times_applied);
+	printf(" %d %d", vaccine->count, vaccine->applied);
 }
 
 void print_inoculation(inoculation_t *inoc)

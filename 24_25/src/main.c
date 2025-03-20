@@ -103,11 +103,14 @@ int main(int argc, char *argv[])
 				cmd_list(state, cmd_argv, cmd_argc);
 				break;
 
+			case 'a':
+				cmd_apply(state, cmd_argv, cmd_argc);
+				break;
+
 			case 't':
 				cmd_time(state, cmd_argv, cmd_argc);
 				break;
 
-			case 'a':
 			case 'r':
 			case 'd':
 			case 'u':

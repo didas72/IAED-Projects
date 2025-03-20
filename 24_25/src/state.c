@@ -91,10 +91,32 @@ void state_add_vaccine(state_t *state, vaccine_t *vaccine)
 		char *name = strdup(vaccine->name);
 		hashtable_add(state->name_to_vaccine, name, vaccines_with_name); //REVIEW: Maybe check return code (in case of failed alloc)
 	}
-
 	vector_append(vaccines_with_name, vaccine); //REVIEW: Maybe check return code (in case of failed alloc)
 }
+void state_add_inoculation(state_t *state, inoculation_t *inoc)
+{
+	vector_append(state->inoculations, inoc); //REVIEW: Maybe check return code (in case of failed alloc)
 
+	//vector_t<inoculation_t*>
+	vector_t *inoculations_with_batch = hashtable_get(state->batch_to_inoc, &inoc->batch);
+	if (inoculations_with_batch == NULL)
+	{
+		inoculations_with_batch = vector_create();
+		batch_t *batch = &inoc->batch; //TODO: Unscrew key ownership (should not be owned by inoculation in case it gets removed)
+		hashtable_add(state->batch_to_inoc, batch, inoculations_with_batch); //REVIEW: Maybe check return code (in case of failed alloc)
+	}
+	vector_append(inoculations_with_batch, inoc); //REVIEW: Maybe check return code (in case of failed alloc)
+
+	//vector_t<vaccine_t*>
+	vector_t *inoculations_with_user = hashtable_get(state->user_to_inoc, &inoc->batch);
+	if (inoculations_with_user == NULL)
+	{
+		inoculations_with_user = vector_create();
+		char *name = strdup(inoc->name);
+		hashtable_add(state->user_to_inoc, name, inoculations_with_user); //REVIEW: Maybe check return code (in case of failed alloc)
+	}
+	vector_append(inoculations_with_user, inoc); //REVIEW: Maybe check return code (in case of failed alloc)
+}
 
 static int available_vaccine_filter(void *vac, void *arg);
 static int oldest_vaccine_comparer(void *first, void *second);
@@ -105,7 +127,6 @@ vaccine_t *state_get_vaccine(state_t *state, char *name)
 
 	if (!vaccines)
 	{
-		ERR_ARG(ERR_NO_VACCINE, name);
 		return NULL;
 	}
 
@@ -114,7 +135,6 @@ vaccine_t *state_get_vaccine(state_t *state, char *name)
 
 	if (available_vaccines->count == 0)
 	{
-		ERR_ARG(ERR_NO_VACCINE, name);
 		vector_destroy(available_vaccines);
 		return NULL;
 	}

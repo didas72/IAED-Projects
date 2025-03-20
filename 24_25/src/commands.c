@@ -17,6 +17,8 @@ void cmd_create(state_t *state, char **argv, size_t argc)
 		fprintf(stderr, "Command 'c' requires exactly 4 arguments");
 		abort();
 	}
+#else
+	(void)argc;
 #endif
 
 	size_t vaccince_count = hashtable_get_count(state->vaccines);
@@ -91,6 +93,8 @@ void cmd_apply(state_t *state, char **argv, size_t argc)
 		fprintf(stderr, "Command 'a' requires exactly 2 arguments");
 		abort();
 	}
+#else
+	(void)argc;
 #endif
 
 	char *user_name = argv[0];
@@ -98,7 +102,16 @@ void cmd_apply(state_t *state, char **argv, size_t argc)
 
 	vaccine_t *vaccine = state_get_vaccine(state, vaccine_name);
 	if (!vaccine)
+	{
+		ERR(ERR_DEPLETED);
 		return;
+	}
+
+	if (vaccine->count <= 0)
+	{
+		ERR(ERR_DEPLETED);
+		return;
+	}
 	
 	//TODO: abstract
 	//vector_t<inoculation_t*>
@@ -113,13 +126,11 @@ void cmd_apply(state_t *state, char **argv, size_t argc)
 		}
 	}
 
-	//TODO: abstract
 	inoculation_t *inoculation = inoculation_create(vaccine->batch, state->current_date, user_name);
-	//TODO: Add to inoculations
-	//TODO: Add to batch_to_inoc
-	//TODO: Add to user_to_inoc
+	state_add_inoculation(state, inoculation);
 
 	--vaccine->count;
+	++vaccine->applied;
 	print_batch(vaccine->batch);
 	putchar('\n');
 }
@@ -185,7 +196,7 @@ static void list_all(state_t *state)
 	for (size_t i = 0; i < vaccines->count; ++i)
 	{
 		vaccine_t *vaccine = vaccines->data[i];
-		print_vaccine(vaccine, 0); //TODO: Properly populate times applied
+		print_vaccine(vaccine);
 		putchar('\n');
 	}
 
@@ -211,7 +222,7 @@ static void list_selected(state_t *state, char **argv, size_t argc)
 		for (size_t j = 0; j < matches->count; ++j)
 		{
 			vaccine_t *vaccine = matches->data[j];
-			print_vaccine(vaccine, 0); //TODO: Properly populate times applied
+			print_vaccine(vaccine);
 			putchar('\n');
 		}
 		vector_destroy(matches);

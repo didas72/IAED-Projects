@@ -25,6 +25,7 @@ typedef struct vaccine_t
 	date_t expiration_date;
 	//Number of vaccines left
 	int count;
+	int applied;
 	char name[VACC_NAME_MAX + 1];
 } vaccine_t;
 
@@ -53,7 +54,7 @@ vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int count, char
 inoculation_t *inoculation_create(batch_t batch, date_t date, char *name);
 void inoculation_destroy(inoculation_t *inoc);
 
-void print_vaccine(vaccine_t *vaccine, int times_applied);
+void print_vaccine(vaccine_t *vaccine);
 
 void print_inoculation(inoculation_t *inoc);
 
