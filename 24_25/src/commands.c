@@ -55,6 +55,12 @@ void cmd_create(state_t *state, char **argv, size_t argc)
 		return;
 	}
 
+	if (date < state->current_date)
+	{
+		ERR(ERR_DATE_NVAL);
+		return;
+	}
+
 	if (sscanf(argv[2], "%d", &count) != 1 || count <= 0)
 	{
 		ERR(ERR_COUNT_NVAL);
@@ -63,6 +69,8 @@ void cmd_create(state_t *state, char **argv, size_t argc)
 
 	vaccine_t *vaccine = vaccine_create(batch, date, count, name);
 	state_add_vaccine(state, vaccine);
+
+	print_batch(vaccine->batch); putchar('\n');
 }
 
 static void list_all(state_t *state);

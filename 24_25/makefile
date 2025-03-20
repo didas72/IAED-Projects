@@ -1,5 +1,6 @@
 CC=gcc
-C_FLAGS=-g -DDEBUG -Wall -Wextra -Wno-unused-result
+C_FLAGS=-g -Wall -Wextra -Wno-unused-result
+#C_FLAGS=-g -DDEBUG -Wall -Wextra -Wno-unused-result
 #C_FLAGS=-O3 -Wall -Wextra -Wno-unused-result
 VAL_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes -s
 
@@ -44,15 +45,15 @@ val: $(DBG_BIN)
 	valgrind $(VAL_FLAGS) ./$(OUTBIN)
 
 test: $(OUTBIN)
-	cd public-tests && $(MAKE)
-	cd private-tests && $(MAKE)
+	cd tests/public-tests && $(MAKE)
+#	cd tests/private-tests && $(MAKE)
 
 clean:
 	$(RM) -r $(DIR_BUILD)
 
 clean-tests:
-	cd public-tests && $(MAKE) clean
-	cd private-tests && $(MAKE) clean
+	cd tests/public-tests && $(MAKE) clean
+#	cd tests/private-tests && $(MAKE) clean
 
 loc:
 	scc -s lines --no-cocomo --no-gitignore -w --size-unit binary --exclude-ext md,makefiles src include

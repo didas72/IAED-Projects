@@ -82,7 +82,6 @@ int main(int argc, char *argv[])
 		if (!parts[0][0] || parts[0][1])
 		{
 			fprintf(stderr, "First part of command must be one character long\n");
-			abort();
 		}
 #endif
 		
