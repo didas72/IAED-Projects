@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 #ifdef DEBUG
 		if (!partc)
 		{
+			fprintf(stderr, "Nothing read\n");
 			should_run = 0;
 			continue;
 		}
@@ -103,11 +104,14 @@ int main(int argc, char *argv[])
 				cmd_list(state, cmd_argv, cmd_argc);
 				break;
 
+			case 't':
+				cmd_time(state, cmd_argv, cmd_argc);
+				break;
+
 			case 'a':
 			case 'r':
 			case 'd':
 			case 'u':
-			case 't':
 				fprintf(stderr, "Not implemented\n");
 				should_run = 0;
 				break;

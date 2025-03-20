@@ -78,7 +78,7 @@ void cmd_list(state_t *state, char **argv, size_t argc)
 void cmd_apply(state_t *state, char **argv, size_t argc)
 {
 #ifdef DEBUG
-	if (argc != 4)
+	if (argc != 2)
 	{
 		fprintf(stderr, "Command 'a' requires exactly 2 arguments");
 		abort();
@@ -116,6 +116,38 @@ void cmd_apply(state_t *state, char **argv, size_t argc)
 	putchar('\n');
 }
 
+void cmd_time(state_t *state, char **argv, size_t argc)
+{
+#ifdef DEBUG
+	if (argc != 1 && argc != 0)
+	{
+		fprintf(stderr, "Command 't' requires 0 or 1 arguments");
+		abort();
+	}
+#endif
+
+	if (argc == 1)
+	{
+		date_t date;
+
+		if ((date = parse_date(argv[0])) == DATE_NVAL)
+		{
+			ERR(ERR_DATE_NVAL);
+			return;
+		}
+
+		if (date < state->current_date)
+		{
+			ERR(ERR_DATE_NVAL);
+			return;
+		}
+
+		state->current_date = date;
+	}
+
+	print_date(state->current_date);
+	putchar('\n');
+}
 
 static int vaccine_comparer(void *first, void *second)
 {
