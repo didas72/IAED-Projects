@@ -118,9 +118,16 @@ void cmd_apply(state_t *state, char **argv, size_t argc)
 	vector_t *inoculations = hashtable_get(state->user_to_inoc, user_name);
 	if (inoculations != NULL && inoculations->count != 0)
 	{
-		inoculation_t *inoc = inoculations->data[inoculations->count - 1];
-		if (inoc->date == state->current_date)
+		for (size_t i = inoculations->count - 1; i != ~0ul; --i)
 		{
+			inoculation_t *inoc = inoculations->data[i];
+			if (inoc->date != state->current_date)
+				break;
+
+			vaccine_t *other_vaccine = hashtable_get(state->vaccines, &inoc->batch);
+			if (strcmp(vaccine_name, other_vaccine->name))
+				continue;
+
 			ERR(ERR_VACCINATED);
 			return;
 		}
@@ -166,6 +173,24 @@ void cmd_time(state_t *state, char **argv, size_t argc)
 
 	print_date(state->current_date);
 	putchar('\n');
+}
+
+static void user_all(state_t *state);
+static void user_selected(state_t *state, char *username);
+void cmd_user(state_t *state, char **argv, size_t argc)
+{
+#ifdef DEBUG
+	if (argc != 1 && argc != 0)
+	{
+		fprintf(stderr, "Command 'u' requires 0 or 1 arguments");
+		abort();
+	}
+#endif
+
+	if (argc == 0)
+		user_all(state);
+	else
+		user_selected(state, argv[0]);
 }
 
 static int vaccine_comparer(void *first, void *second)
@@ -229,4 +254,32 @@ static void list_selected(state_t *state, char **argv, size_t argc)
 	}
 
 	vector_destroy(vaccines);
+}
+
+static void user_all(state_t *state)
+{
+	for (size_t i = 0; i < state->inoculations->count; ++i)
+	{
+		inoculation_t *inoc = state->inoculations->data[i];
+		print_inoculation(inoc); putchar('\n');
+	}
+}
+
+static void user_selected(state_t *state, char *username)
+{
+	//TODO: abstract
+	//vector_t<inoculation_t*>
+	vector_t *inoculations = hashtable_get(state->user_to_inoc, username);
+
+	if (inoculations == NULL)
+	{
+		ERR_ARG(ERR_NO_USER, username);
+		return;
+	}
+
+	for (size_t i = 0; i < inoculations->count; ++i)
+	{
+		inoculation_t *inoc = inoculations->data[i];
+		print_inoculation(inoc); putchar('\n');
+	}
 }

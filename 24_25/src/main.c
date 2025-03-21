@@ -107,13 +107,16 @@ int main(int argc, char *argv[])
 				cmd_apply(state, cmd_argv, cmd_argc);
 				break;
 
+			case 'u':
+				cmd_user(state, cmd_argv, cmd_argc);
+				break;
+
 			case 't':
 				cmd_time(state, cmd_argv, cmd_argc);
 				break;
 
 			case 'r':
 			case 'd':
-			case 'u':
 				fprintf(stderr, "Not implemented\n");
 				should_run = 0;
 				break;

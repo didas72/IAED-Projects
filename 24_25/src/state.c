@@ -108,7 +108,7 @@ void state_add_inoculation(state_t *state, inoculation_t *inoc)
 	vector_append(inoculations_with_batch, inoc); //REVIEW: Maybe check return code (in case of failed alloc)
 
 	//vector_t<vaccine_t*>
-	vector_t *inoculations_with_user = hashtable_get(state->user_to_inoc, &inoc->batch);
+	vector_t *inoculations_with_user = hashtable_get(state->user_to_inoc, inoc->name);
 	if (inoculations_with_user == NULL)
 	{
 		inoculations_with_user = vector_create();
