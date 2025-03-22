@@ -116,6 +116,9 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'r':
+				cmd_remove(state, cmd_argv, cmd_argc);
+				break;
+
 			case 'd':
 				fprintf(stderr, "Not implemented\n");
 				should_run = 0;

@@ -96,7 +96,7 @@ char invalid_vaccine_name(char *name)
 	return 0;
 }
 
-vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int count, char *name)
+vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int available, char *name)
 {
 	vaccine_t *vaccine = malloc(sizeof(vaccine_t));
 	if (!vaccine)
@@ -104,7 +104,7 @@ vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int count, char
 
 	vaccine->batch = batch;
 	vaccine->expiration_date = expiration_date;
-	vaccine->count = count;
+	vaccine->available = available;
 	vaccine->applied = 0;
 	strncpy(vaccine->name, name, VACC_NAME_MAX);
 	vaccine->name[VACC_NAME_MAX] = 0;
@@ -141,7 +141,7 @@ void print_vaccine(vaccine_t *vaccine)
 	print_batch(vaccine->batch);
 	putchar(' ');
 	print_date(vaccine->expiration_date);
-	printf(" %d %d", vaccine->count, vaccine->applied);
+	printf(" %d %d", vaccine->available, vaccine->applied);
 }
 
 void print_inoculation(inoculation_t *inoc)

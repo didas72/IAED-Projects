@@ -107,7 +107,7 @@ void cmd_apply(state_t *state, char **argv, size_t argc)
 		return;
 	}
 
-	if (vaccine->count <= 0)
+	if (vaccine->available <= 0)
 	{
 		ERR(ERR_DEPLETED);
 		return;
@@ -136,7 +136,7 @@ void cmd_apply(state_t *state, char **argv, size_t argc)
 	inoculation_t *inoculation = inoculation_create(vaccine->batch, state->current_date, user_name);
 	state_add_inoculation(state, inoculation);
 
-	--vaccine->count;
+	--vaccine->available;
 	++vaccine->applied;
 	print_batch(vaccine->batch);
 	putchar('\n');
@@ -191,6 +191,46 @@ void cmd_user(state_t *state, char **argv, size_t argc)
 		user_all(state);
 	else
 		user_selected(state, argv[0]);
+}
+
+void cmd_remove(state_t *state, char **argv, size_t argc)
+{
+#ifdef DEBUG
+	if (argc != 1)
+	{
+		fprintf(stderr, "Command 'r' requires exactly 1 arguments");
+		abort();
+	}
+#else
+	(void)argc;
+#endif
+
+	batch_t batch;
+
+	if (parse_batch(argv[0], &batch))
+	{
+		ERR_ARG(ERR_NO_BATCH, argv[0]);
+		return;
+	}
+
+	vaccine_t *vaccine = hashtable_get(state->vaccines, &batch);
+	if (vaccine == NULL)
+	{
+		ERR_ARG(ERR_NO_BATCH, argv[0]);
+		return;
+	}
+
+	printf("%d\n", vaccine->applied);
+
+	if (vaccine->applied == 0)
+	{
+		state_remove_vaccine(state, vaccine);
+		vaccine_destroy(vaccine);
+	}
+	else
+	{
+		vaccine->available = 0;
+	}
 }
 
 static int vaccine_comparer(void *first, void *second)

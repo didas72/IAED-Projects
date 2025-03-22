@@ -38,4 +38,6 @@ void state_add_inoculation(state_t *state, inoculation_t *inoc);
 
 vaccine_t *state_get_vaccine(state_t *state, char *name);
 
+void state_remove_vaccine(state_t *state, vaccine_t *vaccine);
+
 #endif

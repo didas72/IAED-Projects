@@ -146,12 +146,21 @@ vaccine_t *state_get_vaccine(state_t *state, char *name)
 	return vaccine;
 }
 
+void state_remove_vaccine(state_t *state, vaccine_t *vaccine)
+{
+	hashtable_remove(state->vaccines, &vaccine->batch, NULL, NULL);
+
+	//vector_t<vaccine_t*>
+	vector_t *vaccines = hashtable_get(state->name_to_vaccine, vaccine->name);
+	vector_remove(vaccines, vaccine);
+}
+
 static int available_vaccine_filter(void *vac, void *arg)
 {
 	vaccine_t *vaccine = vac;
 	state_t *state = arg;
 
-	return vaccine->count > 0 && vaccine->expiration_date > state->current_date;
+	return vaccine->available > 0 && vaccine->expiration_date > state->current_date;
 }
 static int oldest_vaccine_comparer(void *first, void *second)
 {
