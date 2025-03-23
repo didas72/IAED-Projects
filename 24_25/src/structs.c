@@ -8,33 +8,47 @@
 #define DAYS_IN_YEAR 365
 #define MONTHS_IN_YEAR 12
 
-#define VACCINE_NAME_MAX 50
+#define BATCH_LOW_MAX 16
+#define BATCH_HIGH_MAX 32
 
 
 char parse_batch(char *str, batch_t *batch)
 {
 	char *hex = "0123456789ABCDEF";
 	memset(batch, 0, sizeof(batch_t));
-	unsigned char i;
+	unsigned char i = 0;
 
-	for (i = 0; i < (BATCH_LEN * 2) && str[i]; ++i)
+	for (; i < BATCH_LOW_MAX && i < (BATCH_LEN * 2) && str[i]; ++i)
 	{
 		char *chr = strchr(hex, str[i]);
 		if (!chr)
 			return 1;
-		int idx = chr - hex;
-		batch->data[i >> 1] |= idx << ((1 - (i & 1)) << 2);
+		unsigned long long idx = chr - hex;
+		batch->low |= idx << ((BATCH_LOW_MAX - i - 1) << 2);
 	}
 
-	batch->data[BATCH_LEN] = i;
+	for (; i < BATCH_HIGH_MAX && i < (BATCH_LEN * 2) && str[i]; ++i)
+	{
+		char *chr = strchr(hex, str[i]);
+		if (!chr)
+			return 1;
+		unsigned long long idx = chr - hex;
+		batch->high |= idx << ((BATCH_HIGH_MAX - i - 1) << 2);
+	}
 
+	batch->len = i;
 	return str[i];
 }
 void print_batch(batch_t batch)
 {
 	char *hex = "0123456789ABCDEF";
-	for (int i = 0; i < batch.len; ++i)
-		putchar(hex[(batch.data[i >> 1] >> ((1 - (i & 1)) << 2)) & 0x0F]);
+	int i = 0;
+	for (; i < batch.len && i < BATCH_LOW_MAX; ++i)
+		putchar(hex[(batch.low >> ((BATCH_LOW_MAX - i - 1) << 2)) & 0x0F]);
+	for (; i < batch.len && i < BATCH_HIGH_MAX; ++i)
+		putchar(hex[(batch.high >> ((BATCH_HIGH_MAX - i - 1) << 2)) & 0x0F]);
+	
+	//printf("=%016llx:%016llx:%hhu", batch.low, batch.high, batch.len);
 }
 size_t batch_hasher(void *batch)
 {
@@ -49,11 +63,11 @@ int batch_comprarer(void *first, void *second)
 {
 	batch_t *a = first, *b = second;
 
-	for (int i = 0; i < BATCH_LEN && i < a->len && i < b->len; i++)
-	{
-		if (a->data[i] == b->data[i]) continue;
-		return a->data[i] - b->data[i];
-	}
+	if (a->low != b->low)
+		return a->low > b->low ? 1 : -1;
+
+	if (a->high != b->high)
+		return a->high > b->high ? 1 : -1;
 
 	return a->len - b->len;
 }

@@ -13,9 +13,11 @@
 
 typedef long unsigned int date_t;
 
+//NOTE: Will only work if long is at least 64 bits wide
 typedef struct batch_t
-{ //REVIEW: Sorting might not benefit from this format (reorder hex chars if needed?)
-	unsigned char data[BATCH_LEN];
+{
+	unsigned long long low;
+	unsigned long long high;
 	unsigned char len;
 } batch_t;
 
