@@ -9,5 +9,6 @@ void cmd_apply(state_t *state, char **argv, size_t argc);
 void cmd_time(state_t *state, char **argv, size_t argc);
 void cmd_user(state_t *state, char **argv, size_t argc);
 void cmd_remove(state_t *state, char **argv, size_t argc);
+void cmd_delete(state_t *state, char **argv, size_t argc);
 
 #endif

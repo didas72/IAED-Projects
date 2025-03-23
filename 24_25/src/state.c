@@ -23,7 +23,6 @@ state_t *state_create(int locale)
 	state->vaccines = hashtable_create(batch_hasher, batch_comprarer);
 	state->name_to_vaccine = hashtable_create(hash_str, compare_str);
 	state->inoculations = vector_create();
-	state->batch_to_inoc = hashtable_create(batch_hasher, batch_comprarer);
 	state->user_to_inoc = hashtable_create(hash_str, compare_str);
 
 	switch (locale)
@@ -67,57 +66,30 @@ state_t *state_create(int locale)
 
 	return state;
 }
-
 void state_destroy(state_t *state)
 {
 	hashtable_destroy_free(state->vaccines, NULL, free);
-	hashtable_destroy_free(state->name_to_vaccine, free, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
+	hashtable_destroy_free(state->name_to_vaccine, free, (void (*) (void*))vector_destroy);
 	vector_destroy_free(state->inoculations, (void (*) (void*))inoculation_destroy);
-	hashtable_destroy_free(state->batch_to_inoc, NULL, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
-	hashtable_destroy_free(state->user_to_inoc, free, (void (*) (void*))vector_destroy); //REVIEW: Unexpected in return might overwrite EAX
+	hashtable_destroy_free(state->user_to_inoc, free, (void (*) (void*))vector_destroy);
 
 	free(state);
 }
 
 void state_add_vaccine(state_t *state, vaccine_t *vaccine)
 {
-	hashtable_add(state->vaccines, &vaccine->batch, vaccine); //REVIEW: Maybe check return code (in case of failed alloc)
+	hashtable_add(state->vaccines, &vaccine->batch, vaccine);
 
 	//vector_t<vaccine_t*>
 	vector_t *vaccines_with_name = hashtable_get(state->name_to_vaccine, vaccine->name);
 	if (vaccines_with_name == NULL)
 	{
-		vaccines_with_name = vector_create(); //REVIEW: Maybe check return code (in case of failed alloc)
+		vaccines_with_name = vector_create();
 		char *name = strdup(vaccine->name);
-		hashtable_add(state->name_to_vaccine, name, vaccines_with_name); //REVIEW: Maybe check return code (in case of failed alloc)
+		hashtable_add(state->name_to_vaccine, name, vaccines_with_name);
 	}
-	vector_append(vaccines_with_name, vaccine); //REVIEW: Maybe check return code (in case of failed alloc)
+	vector_append(vaccines_with_name, vaccine);
 }
-void state_add_inoculation(state_t *state, inoculation_t *inoc)
-{
-	vector_append(state->inoculations, inoc); //REVIEW: Maybe check return code (in case of failed alloc)
-
-	//vector_t<inoculation_t*>
-	vector_t *inoculations_with_batch = hashtable_get(state->batch_to_inoc, &inoc->batch);
-	if (inoculations_with_batch == NULL)
-	{
-		inoculations_with_batch = vector_create();
-		batch_t *batch = &inoc->batch; //TODO: Unscrew key ownership (should not be owned by inoculation in case it gets removed)
-		hashtable_add(state->batch_to_inoc, batch, inoculations_with_batch); //REVIEW: Maybe check return code (in case of failed alloc)
-	}
-	vector_append(inoculations_with_batch, inoc); //REVIEW: Maybe check return code (in case of failed alloc)
-
-	//vector_t<vaccine_t*>
-	vector_t *inoculations_with_user = hashtable_get(state->user_to_inoc, inoc->name);
-	if (inoculations_with_user == NULL)
-	{
-		inoculations_with_user = vector_create();
-		char *name = strdup(inoc->name);
-		hashtable_add(state->user_to_inoc, name, inoculations_with_user); //REVIEW: Maybe check return code (in case of failed alloc)
-	}
-	vector_append(inoculations_with_user, inoc); //REVIEW: Maybe check return code (in case of failed alloc)
-}
-
 static int available_vaccine_filter(void *vac, void *arg);
 static int oldest_vaccine_comparer(void *first, void *second);
 vaccine_t *state_get_vaccine(state_t *state, char *name)
@@ -139,13 +111,12 @@ vaccine_t *state_get_vaccine(state_t *state, char *name)
 		return NULL;
 	}
 
-	vector_sort(available_vaccines, oldest_vaccine_comparer); //REVIEW: Check sort order
+	vector_sort(available_vaccines, oldest_vaccine_comparer);
 	vaccine_t *vaccine = available_vaccines->data[0];
 
 	vector_destroy(available_vaccines);
 	return vaccine;
 }
-
 void state_remove_vaccine(state_t *state, vaccine_t *vaccine)
 {
 	hashtable_remove(state->vaccines, &vaccine->batch, NULL, NULL);
@@ -155,6 +126,90 @@ void state_remove_vaccine(state_t *state, vaccine_t *vaccine)
 	vector_remove(vaccines, vaccine);
 }
 
+void state_add_inoculation(state_t *state, inoculation_t *inoc)
+{
+	vector_append(state->inoculations, inoc);
+
+	//vector_t<vaccine_t*>
+	vector_t *inoculations_with_user = hashtable_get(state->user_to_inoc, inoc->name);
+	if (inoculations_with_user == NULL)
+	{
+		inoculations_with_user = vector_create();
+		char *name = strdup(inoc->name);
+		hashtable_add(state->user_to_inoc, name, inoculations_with_user);
+	}
+	vector_append(inoculations_with_user, inoc);
+}
+static size_t binary_search_date_start(vector_t *inocs, date_t date);
+size_t state_remove_inoculations(state_t *state, char *username, date_t date, batch_t batch)
+{ //REVIEW: Should empty users be deleted? Assumes yes
+	//vectpr_t<inoculation_t*>
+	vector_t *selected = vector_create();
+	//vector_t<inoculation_t*>
+	vector_t *inocs = hashtable_get(state->user_to_inoc, username);
+	inoculation_t *inoc;
+
+	//Each condition handles cleanup of inocs (as it is optimizable)
+	//Conditions can expect trailing code to remove user if empty
+	if (date == DATE_NVAL) //Only username was passed
+	{
+		vector_append_vector(selected, inocs);
+		vector_clear(inocs);
+	}
+	else if (batch_invalid(batch)) //Username and date passed
+	{
+		size_t start = binary_search_date_start(inocs, date);
+		size_t count = 1;
+
+		//OPTIMIZE: Replace with binary search as well, but with low = start
+		//NOTE: Max iterations is 1000 (max different vaccines, all inocs in a day must be unique)
+		for (size_t i = start + 1; i < inocs->count; ++i, ++count)
+		{
+			inoc = inocs->data[i];
+			if (inoc->date != date)
+				break;
+		}
+
+		vector_append_range(selected, inocs, start, count);
+		vector_remove_range(inocs, start, count);
+	}
+	else //Username, date and batch passed
+	{
+		size_t start = binary_search_date_start(inocs, date);
+
+		for (size_t i = start; i < inocs->count; ++i)
+		{
+			inoc = inocs->data[i];
+
+			if (batch_comprarer(&inoc->batch, &batch))
+				continue;
+
+			vector_append(selected, inoc);
+			vector_remove(inocs, inoc);
+			break;
+		}
+	}
+
+	//NOTE: Given that inocs, and conseguently selected, have the same order as state->inoculations, 
+	//NOTE:   and that vector_remove shifts higher indices down to lower ones if a gap is formed,
+	//NOTE:   removing inoculations in reverse order yields the best performance
+	for (size_t i = selected->count - 1; i != ~0ul; --i)
+		vector_remove(state->inoculations, selected->data[i]);
+	
+	//Remove user if empty
+	if (inocs->count == 0)
+	{
+		hashtable_remove(state->user_to_inoc, username, NULL, NULL);
+		vector_destroy(inocs);
+	}
+
+	size_t count = selected->count;
+	vector_destroy_free(selected, (void (*)(void*))inoculation_destroy);
+	return count;
+}
+
+
+// Auxiliar functions
 static int available_vaccine_filter(void *vac, void *arg)
 {
 	vaccine_t *vaccine = vac;
@@ -167,4 +222,27 @@ static int oldest_vaccine_comparer(void *first, void *second)
 	vaccine_t *a = first, *b = second;
 
 	return a->expiration_date - b->expiration_date;
+}
+
+static size_t binary_search_date_start(vector_t *inocs, date_t date)
+{ //NOTE: Assumes inocs won't be empty
+	size_t i = 0;
+	size_t high = inocs->count - 1, low = 0;
+	inoculation_t *inoc = inocs->data[0];
+
+	while (high - low)
+	{
+		i = (high + low) >> 1;
+		inoc = inocs->data[i];
+
+		if (inoc->date < date)
+			low = i + 1;
+		else //If high or match
+			high = i;
+	}
+
+	if (inoc->date != date) //Requested date not found
+		return ~(size_t)0;
+
+	return low;
 }

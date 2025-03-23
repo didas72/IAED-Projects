@@ -71,7 +71,9 @@ int batch_comprarer(void *first, void *second)
 
 	return a->len - b->len;
 }
+//#define batch_invalid(batch) (batch.len == 0)
 
+//TODO: Support leap years
 date_t parse_date(char *str)
 {
 	int days_in_month[MONTHS_IN_YEAR] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
@@ -125,7 +127,16 @@ vaccine_t *vaccine_create(batch_t batch, date_t expiration_date, int available, 
 
 	return vaccine;
 }
-//#define vaccine_destroy(vaccine) do { free(vaccine); } while (0)
+//#define vaccine_destroy free
+void print_vaccine(vaccine_t *vaccine)
+{
+	fputs(vaccine->name, stdout);
+	putchar(' ');
+	print_batch(vaccine->batch);
+	putchar(' ');
+	print_date(vaccine->expiration_date);
+	printf(" %d %d", vaccine->available, vaccine->applied);
+}
 
 inoculation_t *inoculation_create(batch_t batch, date_t date, char *name)
 {
@@ -138,7 +149,7 @@ inoculation_t *inoculation_create(batch_t batch, date_t date, char *name)
 	inoc->name = malloc(strlen(name) + 1);
 	if (!inoc->name)
 	{ free(inoc); return NULL; }
-	strcpy(inoc->name, name);
+	strcpy(inoc->name, name); //OPTIMIZE: Single user may have an arbitrary number of inoculations, name will be duplicated a lot
 
 	return inoc;
 }
@@ -147,17 +158,6 @@ void inoculation_destroy(inoculation_t *inoc)
 	free(inoc->name);
 	free(inoc);
 }
-
-void print_vaccine(vaccine_t *vaccine)
-{
-	fputs(vaccine->name, stdout);
-	putchar(' ');
-	print_batch(vaccine->batch);
-	putchar(' ');
-	print_date(vaccine->expiration_date);
-	printf(" %d %d", vaccine->available, vaccine->applied);
-}
-
 void print_inoculation(inoculation_t *inoc)
 {
 	fputs(inoc->name, stdout);

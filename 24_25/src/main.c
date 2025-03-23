@@ -59,14 +59,13 @@ size_t read_cmd(char *buff, size_t len, char **parts)
 }
 
 int main(int argc, char *argv[])
-{
-	(void)argc;
+{ //FIXME: No checks for failed allocations
 	(void)argv;
 
 	char buff[CMD_MAX];
 	char *parts[ARG_MAX];
 
-	state_t *state = state_create(LOCALE_EN);
+	state_t *state = state_create(argc != 1 ? LOCALE_PT : LOCALE_EN);
 
 	char should_run = 1;
 	while (should_run)
@@ -120,8 +119,10 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'd':
-				fprintf(stderr, "Not implemented\n");
-				should_run = 0;
+				cmd_delete(state, cmd_argv, cmd_argc);
+				break;
+
+			default:
 				break;
 		}
 	}
