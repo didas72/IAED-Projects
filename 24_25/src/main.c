@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 { //FIXME: No checks for failed allocations
 	(void)argv;
 
+	size_t linec = 1;
 	char buff[CMD_MAX];
 	char *parts[ARG_MAX];
 
@@ -125,6 +126,8 @@ int main(int argc, char *argv[])
 			default:
 				break;
 		}
+
+		++linec;
 	}
 
 	state_destroy(state);

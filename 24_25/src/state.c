@@ -159,6 +159,11 @@ size_t state_remove_inoculations(state_t *state, char *username, date_t date, ba
 	else if (batch_invalid(batch)) //Username and date passed
 	{
 		size_t start = binary_search_date_start(inocs, date);
+		if (start == ~0ul)
+		{
+			vector_destroy(selected);
+			return 0;
+		}
 		size_t count = 1;
 
 		//OPTIMIZE: Replace with binary search as well, but with low = start
@@ -176,6 +181,11 @@ size_t state_remove_inoculations(state_t *state, char *username, date_t date, ba
 	else //Username, date and batch passed
 	{
 		size_t start = binary_search_date_start(inocs, date);
+		if (start == ~0ul)
+		{
+			vector_destroy(selected);
+			return 0;
+		}
 
 		for (size_t i = start; i < inocs->count; ++i)
 		{
@@ -199,13 +209,15 @@ size_t state_remove_inoculations(state_t *state, char *username, date_t date, ba
 	//Remove user if empty
 	if (inocs->count == 0)
 	{
-		hashtable_remove(state->user_to_inoc, username, NULL, NULL);
+		char *key;
+		hashtable_remove(state->user_to_inoc, username, (void**)&key, NULL);
 		vector_destroy(inocs);
+		free(key);
 	}
 
-	size_t count = selected->count;
+	size_t removed_count = selected->count;
 	vector_destroy_free(selected, (void (*)(void*))inoculation_destroy);
-	return count;
+	return removed_count;
 }
 
 
@@ -240,6 +252,8 @@ static size_t binary_search_date_start(vector_t *inocs, date_t date)
 		else //If high or match
 			high = i;
 	}
+
+	inoc = inocs->data[low];
 
 	if (inoc->date != date) //Requested date not found
 		return ~(size_t)0;
