@@ -1,0 +1,14 @@
+c CA12B5 04-08-2025 120 sarampo
+c 5A8B 08-08-2025 80 corona_virus
+c A0C0 31-07-2025 210 papeira
+a xico sarampo
+t 25-02-2025
+a xico papeira
+t 29-02-2025
+a maria corona_virus
+t 21-3-2025
+a xico sarampo
+u maria
+u xico
+l
+q
