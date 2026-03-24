@@ -1,9 +1,13 @@
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from tree_sitter import Language, Node, Parser
 from tree_sitter_c import language
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -19,8 +23,27 @@ class Scope:
 
 class GcCollector:
     def __init__(self, code: str) -> None:
+        self._node_handler: dict[str, Callable[[Node], None]] = {
+            "declaration": self.handle_declaration,
+        }
+        self._unhandled_types: set[str] = { "compound_statement" }
+
         self._edits: list[Edit] = []
         self.code = code
+        self._scope: Scope | None = Scope(None, set()) # Root scope
+
+    def scope(self) -> Scope:
+        if self._scope is None:
+            raise ValueError
+        return self._scope
+
+    def enter_scope(self, node: Node) -> None:
+        print(f"Entering scope {node.start_point}")
+        self._scope = Scope(self._scope, set())
+
+    def leave_scope(self, node: Node) -> None:
+        print(f"Leaving scope {node.end_point}")
+        self._scope = self.scope().parent
 
     def apply_edits(self) -> None:
         edits = sorted(self._edits, key=lambda e: e.start, reverse=True)
@@ -31,39 +54,50 @@ class GcCollector:
     def add_replace(self, node: Node, content: str) -> None:
         self._edits.append(Edit(node.start_byte, node.end_byte, content))
 
+    def add_prefix(self, node: Node, content: str) -> None:
+        self._edits.append(Edit(node.start_byte, node.start_byte, content))
+
+    def handle_declaration(self, node: Node) -> None:
+        declarators = node.children_by_field_name("declarator")
+
+        for declarator in declarators:
+            decl: Node = declarator
+            while decl.type != "identifier": # Find identifier in pointers and inits
+                lower = decl.child_by_field_name("declarator")
+                if lower is None:
+                    raise RuntimeError
+                decl = lower
+            name = self.code[decl.start_byte:decl.end_byte] if decl else "<unknown>"
+
+            # Ignore non gc_ variables
+            if not name.startswith("gc_"):
+                continue
+
+            print(f"gc_ variable declared: {name} {node.start_point}")
+            self.add_prefix(decl, "!")
+
     def walk(self, node: Node) -> None:
-        print(node.text, node.type)
+        # Scope enter special case
+        if node.type == "compound_statement":
+            self.enter_scope(node)
 
-        # 1) Enter scope
-        if node.type == "compound_statement":  # { ... }
-            print(f"[WARN] Entering scope {node.start_point}")
-
-        # 3) Return statement
-        if node.type == "return_statement":
-            print(f"[WARN] Return statement {node.start_point}")
-
-        # 2) gc_ variable declarations
-        if node.type == "declaration":
-            type_node = node.child_by_field_name("type")
-            declarator = node.child_by_field_name("declarator")
-
-            if type_node:
-                type_text = self.code[type_node.start_byte:type_node.end_byte]
-
-                if type_text.startswith("gc_"):
-                    if declarator is None:
-                        raise RuntimeError
-                    name = self.code[declarator.start_byte:declarator.end_byte] if declarator else "<unknown>"
-                    print(f"[WARN] gc_ variable declared: {name} {node.start_point}")
-                    self.add_replace(declarator, "gc_"+name)
+        handler = self._node_handler.get(node.type)
+        if handler is None:
+            if node.type not in self._unhandled_types:
+                #print(f"[WARN] Unhandled node type: {node.type}")
+                self._unhandled_types.add(node.type)
+        else:
+            # Invoke handler
+            handler(node)
 
         # Walk children
         for child in node.children:
             self.walk(child)
 
-        # 4) Exit scope
+        # Scope leave special case
         if node.type == "compound_statement":
-            print(f"[WARN] Leaving scope {node.start_point}")
+            self.leave_scope(node)
+
 
 def analyze_c_code(code: str) -> None:
     parser = Parser()
@@ -75,6 +109,7 @@ def analyze_c_code(code: str) -> None:
 
     collector = GcCollector(code)
     collector.walk(root)
+    collector.apply_edits()
     print(collector.code)
 
 
