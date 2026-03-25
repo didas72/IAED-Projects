@@ -12,5 +12,5 @@ void *f1()
 int main()
 {
 	int *a = f1();
-	//cgc_collect();
+	cgc_collect();
 }

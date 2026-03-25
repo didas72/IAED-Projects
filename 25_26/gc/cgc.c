@@ -25,6 +25,7 @@ static void *get_stack_base();
 static void _collect();
 static void _mark(hashset_t *marked, void *stack_pointer);
 static void _sweep(hashset_t *marked);
+static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count);
 
 
 
@@ -34,6 +35,11 @@ void *cgc_malloc(size_t size)
 {
 	if (allocs == NULL)
 		_init();
+
+	// Do not tolerate 0 sized allocs
+	// (void*)0 == NULL and this is used for other purposes
+	if (size == 0)
+		return NULL;
 
 	void *ptr = malloc(size);
 
@@ -108,22 +114,7 @@ static void _mark(hashset_t *marked, void *stack_pointer)
 	for (void **cur_stack = stack_pointer; (void*)cur_stack < stack_base; ++cur_stack)
 	{
 		void *ptr = *cur_stack;
-		if (ptr == NULL || ptr < (void*)0x10000) continue;
-
-		for (size_t i = 0; i < alloc_count; ++i)
-		{
-			uint8_t *alloc_base = ptr_v[i];
-			size_t alloc_size = size_v[i];
-
-			if (ptr < (void*)alloc_base) continue;
-			if (ptr > (void*)(alloc_base+alloc_size)) continue;
-
-			if (hashset_contains(marked, alloc_base))
-				continue;
-
-			hashset_add(marked, alloc_base);
-			//TODO: Search inside alloc for more pointers
-		}
+		_recursive_mark(marked, ptr, ptr_v, size_v, alloc_count);
 	}
 
 	ivector_destroy(ptrs);
@@ -149,6 +140,40 @@ static void _sweep(hashset_t *marked)
 	}
 
 	ivector_destroy(all_allocs);
+}
+
+static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count)
+{
+	// Skip NULL and low values (likely integer)
+	if (ptr < (void*)0x10000)
+		return;
+
+	// Skip base of allocations already marked without search
+	if (hashset_contains(marked, ptr))
+		return;
+
+	// Mark base of allocations without linear search
+	if (hashtable_get(allocs, ptr) != NULL) // Relies on no zero-sized allocs
+	{
+		printf("[CGC] Base marked\n");
+		hashset_add(marked, ptr);
+	}
+	else for (size_t i = 0; i < alloc_count; ++i)
+	{
+		uint8_t *alloc_base = ptr_v[i];
+		size_t alloc_size = size_v[i];
+
+		if (ptr < (void*)alloc_base) continue;
+		if (ptr > (void*)(alloc_base+alloc_size)) continue;
+
+		if (hashset_contains(marked, alloc_base))
+			continue;
+
+		printf("[CGC] Non-base marked\n");
+		hashset_add(marked, alloc_base);
+	}
+
+	//TODO: Search for more marks recursively
 }
 
 #define __USE_GNU
