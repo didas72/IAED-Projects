@@ -8,12 +8,12 @@
 //hashtable_t<void*, size_t>
 static hashtable_t *allocs;
 
-void gcg_init()
+void cgc_init()
 {
 	allocs = hashtable_create(hash_ptr, compare_ptr);
 }
 
-void *gcg_malloc(size_t size)
+void *cgc_malloc(size_t size)
 {
 	void *ptr = malloc(size);
 	printf("[CGC] %p=malloc(%lu)\n", ptr, size);
@@ -23,20 +23,19 @@ void *gcg_malloc(size_t size)
 	return ptr;
 }
 
-void *gcg_free(void *ptr)
+void *cgc_free(void *ptr)
 {
 	//TODO: Implement tracking
 	free(ptr);
 }
 
-static void *get_sp();
+#define get_sp() __builtin_frame_address(0)
 static void *get_stack_base();
 
 /// @brief Populates marked with the allocs found to be referenced
 /// @param marked hashset_t<void*>
-static void gcg_mark(hashset_t *marked)
+static void cgc_mark(hashset_t *marked, void *stack_pointer)
 {
-	void *stack_pointer = get_sp();
 	void *stack_base = get_stack_base();
 	printf("[GCG] Marking from stack [%p, %p] (0x%016X)\n", stack_pointer, stack_base, stack_pointer-stack_base);
 
@@ -66,7 +65,7 @@ static void gcg_mark(hashset_t *marked)
 
 			if (hashset_contains(marked, alloc_base))
 			{
-				printf("[CGC] Repeated find on %p due to %p\n", alloc_base, ptr);
+				//printf("[CGC] Repeated find on %p due to %p\n", alloc_base, ptr);
 				continue;
 			}
 
@@ -81,7 +80,7 @@ static void gcg_mark(hashset_t *marked)
 }
 
 /// @param marked hashset_t<void*>
-static void gcg_sweep(hashset_t *marked)
+static void cgc_sweep(hashset_t *marked)
 {
 	size_t alloc_count = hashtable_get_count(allocs);
 	size_t marked_count = hashset_get_count(marked);
@@ -89,20 +88,16 @@ static void gcg_sweep(hashset_t *marked)
 	printf("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
 }
 
-void gcg_collect()
+void cgc_collect()
 {
 	//hashset_t<void*>
 	hashset_t *marked = hashset_create(hash_ptr, compare_ptr);
 
-	gcg_mark(marked);
-	gcg_sweep(marked);
+	void *stack_pointer = get_sp();
+	cgc_mark(marked, stack_pointer);
+	cgc_sweep(marked);
 
 	hashset_destroy(marked);
-}
-
-static void *get_sp()
-{
-	return __builtin_frame_address(0);
 }
 
 #define __USE_GNU

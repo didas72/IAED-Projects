@@ -3,9 +3,9 @@
 
 #include <stddef.h>
 
-void gcg_init();
-void *gcg_malloc(size_t size);
-void *gcg_free(void *ptr);
-void gcg_collect();
+void cgc_init();
+void *cgc_malloc(size_t size);
+void *cgc_free(void *ptr);
+void cgc_collect();
 
 #endif
