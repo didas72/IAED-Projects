@@ -4,9 +4,11 @@
 
 void *f1()
 {
-	int *p1 = &((int*)cgc_malloc(4*sizeof(int)))[2];
+	int **p1 = cgc_malloc(4*sizeof(int*));
 	int *p2 = cgc_malloc(32);
-	return p1;
+	int *p3 = cgc_malloc(sizeof(int));
+	p1[1] = p3;
+	return &p1[2];
 }
 
 int main()

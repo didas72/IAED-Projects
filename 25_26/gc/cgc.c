@@ -25,7 +25,7 @@ static void *get_stack_base();
 static void _collect();
 static void _mark(hashset_t *marked, void *stack_pointer);
 static void _sweep(hashset_t *marked);
-static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count);
+static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
 
 
 
@@ -41,6 +41,7 @@ void *cgc_malloc(size_t size)
 	if (size == 0)
 		return NULL;
 
+	//REVIEW: It's probably better to clear memory to avoid having left over pointers count towards marks
 	void *ptr = malloc(size);
 
 	hashtable_add(allocs, ptr, (void*)size);
@@ -102,6 +103,8 @@ static void _collect()
 /// @param marked hashset_t<void*>
 static void _mark(hashset_t *marked, void *stack_pointer)
 {
+	printf("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
+
 	//ivector_t<void*>
 	ivector_t *ptrs = hashtable_list_keys(allocs);
 	void **ptr_v = ivector_as_pointer(ptrs);
@@ -111,10 +114,15 @@ static void _mark(hashset_t *marked, void *stack_pointer)
 
 	size_t alloc_count = ivector_get_count(ptrs);
 
-	for (void **cur_stack = stack_pointer; (void*)cur_stack < stack_base; ++cur_stack)
+	for (void **cur_stack = stack_pointer; cur_stack < (void**)stack_base; ++cur_stack)
 	{
 		void *ptr = *cur_stack;
-		_recursive_mark(marked, ptr, ptr_v, size_v, alloc_count);
+
+		// Skip stack pointers (still a lot of them remain, how to fix?)
+		if (ptr < stack_base && ptr > stack_pointer)
+			continue;
+
+		_recursive_mark(marked, ptr, ptr_v, size_v, alloc_count, 0);
 	}
 
 	ivector_destroy(ptrs);
@@ -136,14 +144,21 @@ static void _sweep(hashset_t *marked)
 	for (size_t i = 0; i < alloc_count && to_sweep != 0; ++i)
 	{
 		if (!hashset_contains(marked, allocs_v[i]))
+		{
 			_inner_free(allocs_v[i]);
+			--to_sweep;
+		}
 	}
 
 	ivector_destroy(all_allocs);
 }
 
-static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count)
+static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl)
 {
+	uint8_t *alloc_base;
+	size_t alloc_size;
+	size_t i = 0;
+
 	// Skip NULL and low values (likely integer)
 	if (ptr < (void*)0x10000)
 		return;
@@ -153,27 +168,35 @@ static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *
 		return;
 
 	// Mark base of allocations without linear search
-	if (hashtable_get(allocs, ptr) != NULL) // Relies on no zero-sized allocs
+	if ((alloc_size = (size_t)hashtable_get(allocs, ptr)) != 0) // Relies on no zero-sized allocs
 	{
-		printf("[CGC] Base marked\n");
 		hashset_add(marked, ptr);
 	}
-	else for (size_t i = 0; i < alloc_count; ++i)
+	// Linear search in case of not being a base
+	else for (i = 0; i < alloc_count; ++i)
 	{
-		uint8_t *alloc_base = ptr_v[i];
-		size_t alloc_size = size_v[i];
+		alloc_base = ptr_v[i];
+		alloc_size = size_v[i];
 
 		if (ptr < (void*)alloc_base) continue;
 		if (ptr > (void*)(alloc_base+alloc_size)) continue;
 
+		//Already marked
 		if (hashset_contains(marked, alloc_base))
-			continue;
+			return;
 
-		printf("[CGC] Non-base marked\n");
 		hashset_add(marked, alloc_base);
+		break;
 	}
 
-	//TODO: Search for more marks recursively
+	if (i == alloc_count) //No match found in linear search
+		return;
+
+	for (void **nested_addr = (void**)alloc_base; nested_addr < (void**)(alloc_base+alloc_size); ++nested_addr)
+	{
+		void *nested_ptr = *nested_addr;
+		_recursive_mark(marked, nested_ptr, ptr_v, size_v, alloc_count, lvl+1);
+	}
 }
 
 #define __USE_GNU
