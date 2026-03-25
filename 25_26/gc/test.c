@@ -1,7 +1,13 @@
-#include <stdlib.h>
+#include <stdio.h>
 
-typedef int gc_int;
+#include "cgc.h"
 
-int foo() {
-	gc_int *v = malloc(sizeof(int));
+void f1()
+{
+	int *a = gcg_malloc(4*sizeof(int));
+}
+
+int main()
+{
+	gcg_collect();
 }
