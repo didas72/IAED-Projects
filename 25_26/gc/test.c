@@ -11,7 +11,6 @@ void *f1()
 
 int main()
 {
-	cgc_init();
 	int *a = f1();
-	cgc_collect();
+	//cgc_collect();
 }
