@@ -3,6 +3,7 @@
 #include <sus/hashes.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 
 //hashtable_t<void*, size_t>
 static hashtable_t *allocs;
@@ -15,6 +16,7 @@ void gcg_init()
 void *gcg_malloc(size_t size)
 {
 	void *ptr = malloc(size);
+	printf("[CGC] %p=malloc(%lu)\n", ptr, size);
 
 	hashtable_add(allocs, ptr, (void*)size);
 
@@ -30,18 +32,16 @@ void *gcg_free(void *ptr)
 static void *get_sp();
 static void *get_stack_base();
 
-#include <stdio.h>
-
 /// @brief Populates marked with the allocs found to be referenced
 /// @param marked hashset_t<void*>
 static void gcg_mark(hashset_t *marked)
 {
 	void *stack_pointer = get_sp();
 	void *stack_base = get_stack_base();
-	printf("[GCG] Marking from stack [%p, %p]\n", stack_pointer, stack_base);
+	printf("[GCG] Marking from stack [%p, %p] (0x%016X)\n", stack_pointer, stack_base, stack_pointer-stack_base);
 
-	uint8_t *base;
-	size_t size;
+	uint8_t *alloc_base;
+	size_t alloc_size;
 
 	//ivector_t<void*>
 	ivector_t *ptrs = hashtable_list_keys(allocs);
@@ -50,24 +50,28 @@ static void gcg_mark(hashset_t *marked)
 
 	size_t alloc_count = ivector_get_count(ptrs);
 
-	for (void **cur_stack = stack_pointer; cur_stack < stack_base; ++cur_stack)
+	for (void **cur_stack = stack_pointer; (void*)cur_stack < stack_base; ++cur_stack)
 	{
 		void *ptr = *cur_stack;
-		printf("[CGC] Checking %p at %p\n", ptr, cur_stack);
+		if (ptr == NULL || ptr < (void*)0x10000) continue;
+		//printf("[CGC] Checking %p at %p\n", ptr, cur_stack);
 
 		for (size_t i = 0; i < alloc_count; ++i)
 		{
-			ivector_fetch(ptrs, i, &base);
-			ivector_fetch(ptrs, i, &size);
+			ivector_fetch(ptrs, i, &alloc_base);
+			ivector_fetch(sizes, i, &alloc_size);
 
-			if (ptr < base) continue;
-			if (ptr > base+size) continue;
+			if (ptr < (void*)alloc_base) continue;
+			if (ptr > (void*)(alloc_base+alloc_size)) continue;
 
-			if (hashset_contains(marked, base))
+			if (hashset_contains(marked, alloc_base))
+			{
+				printf("[CGC] Repeated find on %p due to %p\n", alloc_base, ptr);
 				continue;
+			}
 
-			printf("[CGC] Marked %p due to %p\n", base, ptr);
-			hashset_add(marked, base);
+			printf("[CGC] Marked %p (0x%0X) due to %p at %p\n", alloc_base, alloc_size, ptr, cur_stack);
+			hashset_add(marked, alloc_base);
 			//TODO: Search inside alloc for more pointers
 		}
 	}
@@ -79,7 +83,10 @@ static void gcg_mark(hashset_t *marked)
 /// @param marked hashset_t<void*>
 static void gcg_sweep(hashset_t *marked)
 {
-
+	size_t alloc_count = hashtable_get_count(allocs);
+	size_t marked_count = hashset_get_count(marked);
+	size_t to_sweep = alloc_count-marked_count;
+	printf("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
 }
 
 void gcg_collect()
@@ -98,7 +105,7 @@ static void *get_sp()
 	return __builtin_frame_address(0);
 }
 
-#define _GNU_SOURCE
+#define __USE_GNU
 #include <pthread.h>
 
 static void *get_stack_base()
@@ -106,8 +113,8 @@ static void *get_stack_base()
 	void *base;
 	size_t size;
     pthread_attr_t attr;
-    pthread_attr_init(&attr);
+	pthread_getattr_np(pthread_self(), &attr);
     pthread_attr_getstack(&attr, &base, &size);
     pthread_attr_destroy(&attr);
-	return base;
+	return (uint8_t*)base+size;
 }
