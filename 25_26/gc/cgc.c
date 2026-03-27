@@ -23,14 +23,16 @@ static size_t allocd_size_since_collect = 0;
 
 // === Private declarations ===
 
+#define get_bp() __builtin_frame_address(0)
+
 static void _init();
 static void _cleanup();
 static void *_inner_alloc(size_t size);
 static void _inner_free(void *ptr);
 static void *get_stack_base();
 
-static void _check_collect();
-static void _collect();
+static void _check_collect(void *stack_pointer);
+static void _collect(void *stack_pointer);
 static void _mark(hashset_t *marked, void *stack_pointer);
 static void _sweep(hashset_t *marked);
 static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
@@ -75,14 +77,16 @@ void *cgc_malloc(size_t size)
 		return NULL;
 
 	// Collect memory as needed
-	_check_collect();
+	void *stack_pointer = get_bp();
+	_check_collect(stack_pointer);
 
 	return _inner_alloc(size);
 }
 
 void cgc_collect()
 {
-	_collect();
+	void *stack_pointer = get_bp();
+	_collect(stack_pointer);
 }
 
 void *cgc_free(void *ptr)
@@ -146,9 +150,7 @@ static void _inner_free(void *ptr)
 	total_allocated -= size;
 }
 
-#define get_bp() __builtin_frame_address(0)
-
-static void _check_collect()
+static void _check_collect(void *stack_pointer)
 {
 	// Collect if:
 	//   - Doubled allocated memory
@@ -159,16 +161,13 @@ static void _check_collect()
 		return;
 
 	printf("[CGC] Autocollect (size=%lu/%lu; count=%lu/%lu)\n", allocd_size_since_collect, total_allocated, allocs_since_collect, hashtable_get_count(allocs));
-	_collect();
+	_collect(stack_pointer);
 }
 
-static void _collect()
+static void _collect(void *stack_pointer)
 {
 	//hashset_t<void*>
 	hashset_t *marked = hashset_create(hash_ptr, compare_ptr);
-
-	// Base pointer of current function is stack pointer of caller (hopefully)
-	void *stack_pointer = get_bp();
 
 	_mark(marked, stack_pointer);
 	_sweep(marked);
