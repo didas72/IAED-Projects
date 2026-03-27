@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 
 
@@ -13,19 +14,49 @@
 static hashtable_t *allocs = NULL;
 static void *stack_base = NULL;
 
+// Metrics for auto collection
+static size_t allocs_since_collect = 0;
+static size_t total_allocated = 0;
+static size_t allocd_size_since_collect = 0;
+
 
 
 // === Private declarations ===
 
 static void _init();
 static void _cleanup();
+static void *_inner_alloc(size_t size);
 static void _inner_free(void *ptr);
 static void *get_stack_base();
 
+static void _check_collect();
 static void _collect();
 static void _mark(hashset_t *marked, void *stack_pointer);
 static void _sweep(hashset_t *marked);
 static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
+
+enum TERM_COLOR
+{
+	COLOR_DEFAULT = 39,
+	COLOR_BLACK = 30,
+	COLOR_DARK_RED= 31,
+	COLOR_DARK_GREEN = 32,
+	COLOR_DARK_YELLOW = 33,
+	COLOR_DARK_BLUE = 34,
+	COLOR_DARK_MAGENTA = 35,
+	COLOR_DARK_CYAN = 36,
+	COLOR_LIGHT_GRAY = 37,
+	COLOR_DARK_GRAY = 90,
+	COLOR_RED = 91,
+	COLOR_GREEN = 92,
+	COLOR_ORANGE = 93,
+	COLOR_BLUE = 94,
+	COLOR_MAGENTA = 95,
+	COLOR_CYAN = 96,
+	COLOR_WHITE = 97,
+};
+
+static void set_color(int fg, int bg, char bold);
 
 
 
@@ -33,6 +64,8 @@ static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *
 
 void *cgc_malloc(size_t size)
 {
+	//TODO: Reorder check_collect to collect before large alloc
+
 	if (allocs == NULL)
 		_init();
 
@@ -41,12 +74,10 @@ void *cgc_malloc(size_t size)
 	if (size == 0)
 		return NULL;
 
-	//REVIEW: It's probably better to clear memory to avoid having left over pointers count towards marks
-	void *ptr = malloc(size);
+	// Collect memory as needed
+	_check_collect();
 
-	hashtable_add(allocs, ptr, (void*)size);
-
-	return ptr;
+	return _inner_alloc(size);
 }
 
 void cgc_collect()
@@ -79,31 +110,82 @@ static void _cleanup()
 	hashtable_destroy_free(allocs, free, NULL);
 }
 
-static void _inner_free(void *ptr)
+static void *_inner_alloc(size_t size)
 {
-	hashtable_remove(allocs, ptr, NULL, NULL);
-	free(ptr);
+	// Allocate the memory
+	void *ptr = malloc(size);
+
+	//It's probably better to clear memory to avoid having left over pointers count towards marks
+	memset(ptr, 0, size);
+
+	set_color(COLOR_DARK_BLUE, COLOR_DEFAULT, 0);
+	printf("[CGC] %p=malloc(%lu)\n", ptr, size);
+	set_color(COLOR_DEFAULT, COLOR_DEFAULT, 0);
+
+	// Track allocation
+	hashtable_add(allocs, ptr, (void*)size);
+
+	// Update metrics for auto-collect
+	total_allocated += size;
+	allocd_size_since_collect += size;
+	++allocs_since_collect;
+
+	return ptr;
 }
 
-#define get_sp() __builtin_frame_address(0)
+static void _inner_free(void *ptr)
+{
+	// Free the memory
+	free(ptr);
+
+	// Untrack allocation
+	size_t size;
+	hashtable_remove(allocs, ptr, NULL, (void**)&size);
+
+	// Update metrics for auto-collect
+	total_allocated -= size;
+}
+
+#define get_bp() __builtin_frame_address(0)
+
+static void _check_collect()
+{
+	// Collect if:
+	//   - Doubled allocated memory
+	//   - Doubled tracked allocation count
+
+	if ((allocd_size_since_collect * 2) <= total_allocated && // Not doubled memory
+		(allocs_since_collect * 2) <= hashtable_get_count(allocs)) // Not doubled allocs
+		return;
+
+	printf("[CGC] Autocollect (size=%lu/%lu; count=%lu/%lu)\n", allocd_size_since_collect, total_allocated, allocs_since_collect, hashtable_get_count(allocs));
+	_collect();
+}
 
 static void _collect()
 {
 	//hashset_t<void*>
 	hashset_t *marked = hashset_create(hash_ptr, compare_ptr);
 
-	void *stack_pointer = get_sp();
+	// Base pointer of current function is stack pointer of caller (hopefully)
+	void *stack_pointer = get_bp();
+
 	_mark(marked, stack_pointer);
 	_sweep(marked);
 
+	// Cleanup
 	hashset_destroy(marked);
+
+	// Reset metrics for auto-collect
+	allocs_since_collect = 0;
+	allocd_size_since_collect = 0;
 }
 
 /// @brief Populates marked with the allocs found to be referenced
 /// @param marked hashset_t<void*>
 static void _mark(hashset_t *marked, void *stack_pointer)
 {
-	printf("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
+	//printf("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
 
 	//ivector_t<void*>
 	ivector_t *ptrs = hashtable_list_keys(allocs);
@@ -118,10 +200,17 @@ static void _mark(hashset_t *marked, void *stack_pointer)
 	{
 		void *ptr = *cur_stack;
 
-		// Skip stack pointers (still a lot of them remain, how to fix?)
+		// Skip stack pointers
+		//REVIEW: still a lot of them remain, how to fix?
 		if (ptr < stack_base && ptr > stack_pointer)
 			continue;
 
+		if (ptr != NULL && ptr > (void*)0x500000000000 && ptr < (void*)0x7f0000000000)
+		{
+			set_color(COLOR_DARK_GRAY, COLOR_DEFAULT, 0);
+			printf("[CGC] Checking stack pointer at %p: %p\n", cur_stack, ptr);
+			set_color(COLOR_DEFAULT, COLOR_DEFAULT, 0);
+		}
 		_recursive_mark(marked, ptr, ptr_v, size_v, alloc_count, 0);
 	}
 
@@ -138,7 +227,9 @@ static void _sweep(hashset_t *marked)
 	size_t alloc_count = ivector_get_count(all_allocs);
 	size_t marked_count = hashset_get_count(marked);
 	size_t to_sweep = alloc_count-marked_count;
+	set_color(COLOR_GREEN, COLOR_DEFAULT, 0);
 	printf("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
+	set_color(COLOR_DEFAULT, COLOR_DEFAULT, 0);
 
 	void **allocs_v = ivector_as_pointer(all_allocs);
 	for (size_t i = 0; i < alloc_count && to_sweep != 0; ++i)
@@ -170,7 +261,9 @@ static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *
 	// Mark base of allocations without linear search
 	if ((alloc_size = (size_t)hashtable_get(allocs, ptr)) != 0) // Relies on no zero-sized allocs
 	{
+		alloc_base = ptr;
 		hashset_add(marked, ptr);
+		printf("[CGC] Marked base %p (lvl=%d)\n", alloc_base, lvl);
 	}
 	// Linear search in case of not being a base
 	else for (i = 0; i < alloc_count; ++i)
@@ -179,13 +272,14 @@ static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *
 		alloc_size = size_v[i];
 
 		if (ptr < (void*)alloc_base) continue;
-		if (ptr > (void*)(alloc_base+alloc_size)) continue;
+		if (ptr >= (void*)(alloc_base+alloc_size)) continue;
 
 		//Already marked
 		if (hashset_contains(marked, alloc_base))
 			return;
 
 		hashset_add(marked, alloc_base);
+		printf("[CGC] Marked %p by offset %p (lvl=%d)\n", alloc_base, ptr, lvl);
 		break;
 	}
 
@@ -211,4 +305,9 @@ static void *get_stack_base()
     pthread_attr_getstack(&attr, &base, &size);
     pthread_attr_destroy(&attr);
 	return (uint8_t*)base+size;
+}
+
+static void set_color(int fg, int bg, char bold)
+{
+	printf("\033[%d;%dm\033[%dm", bold, fg, bg + 10);
 }
