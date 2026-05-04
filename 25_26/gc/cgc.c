@@ -16,10 +16,10 @@
 #define CGC_PUBLIC_ENTER(do_gc) do { \
 	in_cgc = 1; \
 	if (allocs == NULL) { \
-		_init(); \
+		init(); \
 	} \
 	if (do_gc) { \
-		_check_collect(get_bp()); \
+		check_collect(get_bp()); \
 	} \
 } while(0)
 #define CGC_PUBLIC_EXIT() do { in_cgc = 0; } while(0)
@@ -62,17 +62,17 @@ static size_t allocd_size_since_collect = 0;
 
 #define get_bp() __builtin_frame_address(0)
 
-static void _init();
-static void _cleanup();
-static void *_inner_realloc(void *ptr, size_t size);
-static void _inner_free(void *ptr);
+static void init();
+static void cleanup();
+static void *inner_realloc(void *ptr, size_t size);
+static void inner_free(void *ptr);
 static void *get_stack_base();
 
-static void _check_collect(void *stack_pointer);
-static void _collect(void *stack_pointer);
-static void _mark(hashset_t *marked, void *stack_pointer);
-static void _sweep(hashset_t *marked);
-static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
+static void check_collect(void *stack_pointer);
+static void collect(void *stack_pointer);
+static void mark(hashset_t *marked, void *stack_pointer);
+static void sweep(hashset_t *marked);
+static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
 
 enum TERM_COLOR
 {
@@ -117,7 +117,7 @@ void *malloc(size_t size)
 		goto _malloc_skip;
 	}
 
-	new_ptr = _inner_realloc(NULL, size);
+	new_ptr = inner_realloc(NULL, size);
 
 	//It's probably better to clear memory to avoid having left-over pointers count towards marks
 	memset(new_ptr, 0, size);
@@ -137,7 +137,7 @@ void free(void *ptr)
 
 	CGC_PUBLIC_ENTER(NO_GC);
 
-	_inner_free(ptr);
+	inner_free(ptr);
 
 	CGC_PUBLIC_EXIT();
 }
@@ -166,7 +166,7 @@ void *calloc(size_t n, size_t size)
 		goto _calloc_skip;
 	}
 
-	new_ptr = _inner_realloc(NULL, size);
+	new_ptr = inner_realloc(NULL, size);
 	memset(new_ptr, 0, size);
 
 _calloc_skip:
@@ -186,12 +186,12 @@ void *realloc(void *p, size_t size)
 	void *new_ptr;
 	if (size == 0)
 	{
-		_inner_free(p);
+		inner_free(p);
 		new_ptr = NULL;
 		goto _realloc_skip;
 	}
 
-	new_ptr = _inner_realloc(p, size);
+	new_ptr = inner_realloc(p, size);
 
 _realloc_skip:
 	CGC_PUBLIC_EXIT();
@@ -218,12 +218,12 @@ void *reallocarray(void *p, size_t n, size_t size)
 	size_t final_size = n * size;
 	if (final_size == 0)
 	{
-		_inner_free(p);
+		inner_free(p);
 		new_ptr = NULL;
 		goto _reallocarray_skip;
 	}
 
-	new_ptr = _inner_realloc(p, final_size);
+	new_ptr = inner_realloc(p, final_size);
 
 _reallocarray_skip:
 	CGC_PUBLIC_EXIT();
@@ -234,7 +234,7 @@ _reallocarray_skip:
 
 // === Private implementations ===
 
-static void _init()
+static void init()
 {
 	// Real function setup MUST be the first thing to run
 	real_malloc = dlsym(RTLD_NEXT, "malloc");
@@ -246,10 +246,10 @@ static void _init()
 	allocs = hashtable_create(hash_ptr, compare_ptr);
 	stack_base = get_stack_base();
 
-	atexit(_cleanup);
+	atexit(cleanup);
 }
 
-static void _cleanup()
+static void cleanup()
 {
 	//NOTE: While not 'public' interface, still needs in_cgc guard
 	CGC_PUBLIC_ENTER(NO_GC);
@@ -261,7 +261,7 @@ static void _cleanup()
 }
 
 //NOTE: Assumes size will never be zero, and therefor will NOT handle 'free' behaviour
-static void *_inner_realloc(void *ptr, size_t size)
+static void *inner_realloc(void *ptr, size_t size)
 {
 	// Find original size (if existing)
 	size_t old_size = 0;
@@ -291,7 +291,7 @@ static void *_inner_realloc(void *ptr, size_t size)
 	return new_ptr;
 }
 
-static void _inner_free(void *ptr)
+static void inner_free(void *ptr)
 {
 	// Free the memory
 	real_free(ptr);
@@ -304,7 +304,7 @@ static void _inner_free(void *ptr)
 	total_allocated -= size;
 }
 
-static void _check_collect(void *stack_pointer)
+static void check_collect(void *stack_pointer)
 {
 	// Collect if:
 	//   - Doubled allocated memory
@@ -315,16 +315,16 @@ static void _check_collect(void *stack_pointer)
 		return;
 
 	LOG("[CGC] Autocollect (size=%lu/%lu; count=%lu/%lu)\n", allocd_size_since_collect, total_allocated, allocs_since_collect, hashtable_get_count(allocs));
-	_collect(stack_pointer);
+	collect(stack_pointer);
 }
 
-static void _collect(void *stack_pointer)
+static void collect(void *stack_pointer)
 {
 	//hashset_t<void*>
 	hashset_t *marked = hashset_create(hash_ptr, compare_ptr);
 
-	_mark(marked, stack_pointer);
-	_sweep(marked);
+	mark(marked, stack_pointer);
+	sweep(marked);
 
 	// Cleanup
 	hashset_destroy(marked);
@@ -336,7 +336,7 @@ static void _collect(void *stack_pointer)
 
 /// @brief Populates marked with the allocs found to be referenced
 /// @param marked hashset_t<void*>
-static void _mark(hashset_t *marked, void *stack_pointer)
+static void mark(hashset_t *marked, void *stack_pointer)
 {
 	LOG("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
 
@@ -362,7 +362,7 @@ static void _mark(hashset_t *marked, void *stack_pointer)
 		{
 			LOG_COLOR(COLOR_DARK_GRAY, COLOR_DEFAULT, 0, "[CGC] Checking stack pointer at %p: %p\n", cur_stack, ptr);
 		}
-		_recursive_mark(marked, ptr, ptr_v, size_v, alloc_count, 0);
+		recursive_mark(marked, ptr, ptr_v, size_v, alloc_count, 0);
 	}
 
 	ivector_destroy(ptrs);
@@ -370,7 +370,7 @@ static void _mark(hashset_t *marked, void *stack_pointer)
 }
 
 /// @param marked hashset_t<void*>
-static void _sweep(hashset_t *marked)
+static void sweep(hashset_t *marked)
 {
 	//ivector_t<void *>
 	ivector_t *all_allocs = hashtable_list_keys(allocs);
@@ -385,7 +385,7 @@ static void _sweep(hashset_t *marked)
 	{
 		if (!hashset_contains(marked, allocs_v[i]))
 		{
-			_inner_free(allocs_v[i]);
+			inner_free(allocs_v[i]);
 			--to_sweep;
 		}
 	}
@@ -393,7 +393,7 @@ static void _sweep(hashset_t *marked)
 	ivector_destroy(all_allocs);
 }
 
-static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl)
+static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl)
 {
 	uint8_t *alloc_base;
 	size_t alloc_size;
@@ -438,7 +438,7 @@ static void _recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *
 	for (void **nested_addr = (void**)alloc_base; nested_addr < (void**)(alloc_base+alloc_size); ++nested_addr)
 	{
 		void *nested_ptr = *nested_addr;
-		_recursive_mark(marked, nested_ptr, ptr_v, size_v, alloc_count, lvl+1);
+		recursive_mark(marked, nested_ptr, ptr_v, size_v, alloc_count, lvl+1);
 	}
 }
 
