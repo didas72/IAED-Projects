@@ -109,19 +109,22 @@ void *malloc(size_t size)
 	}
 
 	CGC_PUBLIC_ENTER(DO_GC);
+	void *new_ptr;
 
-	// Reject 0 sized allocs
-	// (void*)0 == NULL and this is used for other purposes
 	if (size == 0)
-		return NULL;
+	{
+		new_ptr = NULL;
+		goto _malloc_skip;
+	}
 
-	void *ptr = _inner_realloc(NULL, size);
+	new_ptr = _inner_realloc(NULL, size);
 
 	//It's probably better to clear memory to avoid having left-over pointers count towards marks
-	memset(ptr, 0, size);
+	memset(new_ptr, 0, size);
 
+_malloc_skip:
 	CGC_PUBLIC_EXIT();
-	return ptr;
+	return new_ptr;
 }
 
 void free(void *ptr)
@@ -147,15 +150,28 @@ void *calloc(size_t n, size_t size)
 	}
 
 	CGC_PUBLIC_ENTER(DO_GC);
+	void *new_ptr;
 
-	//TODO: Handle case where overflow would occur
+	// Prevent overflow
+	if (n > SIZE_MAX / size)
+	{
+		new_ptr = NULL;
+		goto _calloc_skip;
+	}
+
 	size_t final_size = n * size;
+	if (final_size == 0)
+	{
+		new_ptr = NULL;
+		goto _calloc_skip;
+	}
 
-	void *ptr = _inner_realloc(NULL, size);
-	memset(ptr, 0, size);
+	new_ptr = _inner_realloc(NULL, size);
+	memset(new_ptr, 0, size);
 
+_calloc_skip:
 	CGC_PUBLIC_EXIT();
-	return ptr;
+	return new_ptr;
 }
 
 void *realloc(void *p, size_t size)
@@ -172,12 +188,12 @@ void *realloc(void *p, size_t size)
 	{
 		_inner_free(p);
 		new_ptr = NULL;
-	}
-	else
-	{
-		new_ptr = _inner_realloc(p, size);
+		goto _realloc_skip;
 	}
 
+	new_ptr = _inner_realloc(p, size);
+
+_realloc_skip:
 	CGC_PUBLIC_EXIT();
 	return new_ptr;
 }
@@ -190,20 +206,26 @@ void *reallocarray(void *p, size_t n, size_t size)
 	}
 
 	CGC_PUBLIC_ENTER(DO_GC);
-
 	void *new_ptr;
-	//TODO: Handle case where overflow would occur
+
+	// Prevent overflow
+	if (n > SIZE_MAX / size)
+	{
+		new_ptr = NULL;
+		goto _reallocarray_skip;
+	}
+
 	size_t final_size = n * size;
 	if (final_size == 0)
 	{
 		_inner_free(p);
 		new_ptr = NULL;
-	}
-	else
-	{
-		new_ptr = _inner_realloc(p, final_size);
+		goto _reallocarray_skip;
 	}
 
+	new_ptr = _inner_realloc(p, final_size);
+
+_reallocarray_skip:
 	CGC_PUBLIC_EXIT();
 	return new_ptr;
 }
