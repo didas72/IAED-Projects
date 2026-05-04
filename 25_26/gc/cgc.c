@@ -5,7 +5,6 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
-//FIXME: libsus will likely compile against the GC'd alloc/free
 #include <sus/hashtable.h>
 #include <sus/hashset.h>
 #include <sus/hashes.h>
@@ -168,10 +167,19 @@ void *realloc(void *p, size_t size)
 
 	CGC_PUBLIC_ENTER();
 
-	//TODO: Implement
+	void *new_ptr;
+	if (size == 0)
+	{
+		_inner_free(p);
+		new_ptr = NULL;
+	}
+	else
+	{
+		new_ptr = _inner_realloc(p, size);
+	}
 
 	CGC_PUBLIC_EXIT();
-	return real_realloc(p, size);
+	return new_ptr;
 }
 
 void *reallocarray(void *p, size_t n, size_t size)
@@ -183,10 +191,21 @@ void *reallocarray(void *p, size_t n, size_t size)
 
 	CGC_PUBLIC_ENTER();
 
-	//TODO: Implement
+	void *new_ptr;
+	//TODO: Handle case where overflow would occur
+	size_t final_size = n * size;
+	if (final_size == 0)
+	{
+		_inner_free(p);
+		new_ptr = NULL;
+	}
+	else
+	{
+		new_ptr = _inner_realloc(p, final_size);
+	}
 
 	CGC_PUBLIC_EXIT();
-	return real_reallocarray(p, n, size);
+	return new_ptr;
 }
 
 void cgc_collect()
@@ -230,8 +249,9 @@ static void _cleanup()
 	CGC_PUBLIC_EXIT();
 }
 
+//NOTE: Assumes size will never be zero, and therefor will NOT handle 'free' behaviour
 static void *_inner_realloc(void *ptr, size_t size)
-{ //NOTE: Assumes size will never be zero
+{
 	// Find original size (if existing)
 	size_t old_size = 0;
 	if (hashtable_has_key(allocs, ptr))
@@ -241,6 +261,10 @@ static void *_inner_realloc(void *ptr, size_t size)
 	void *new_ptr = real_realloc(ptr, size);
 
 	LOG_COLOR(COLOR_DARK_BLUE, COLOR_DEFAULT, 0, "[CGC] %p=alloc(%lu)\n", new_ptr, size);
+
+	// Failed (re)allocations shouldn't change any state
+	if (new_ptr == NULL)
+		return NULL;
 
 	// Track allocation
 	if (old_size == 0)
