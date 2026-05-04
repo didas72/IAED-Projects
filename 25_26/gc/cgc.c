@@ -11,7 +11,17 @@
 
 
 // === Internal macros ===
-#define CGC_PUBLIC_ENTER() do { in_cgc = 1; if (allocs == NULL) { _init(); } } while(0)
+#define NO_GC 0
+#define DO_GC 1
+#define CGC_PUBLIC_ENTER(do_gc) do { \
+	in_cgc = 1; \
+	if (allocs == NULL) { \
+		_init(); \
+	} \
+	if (do_gc) { \
+		_check_collect(get_bp()); \
+	} \
+} while(0)
 #define CGC_PUBLIC_EXIT() do { in_cgc = 0; } while(0)
 
 #ifdef USE_DEBUG_LOG
@@ -98,17 +108,12 @@ void *malloc(size_t size)
 		return real_malloc(size);
 	}
 
-	CGC_PUBLIC_ENTER();
+	CGC_PUBLIC_ENTER(DO_GC);
 
 	// Reject 0 sized allocs
 	// (void*)0 == NULL and this is used for other purposes
 	if (size == 0)
 		return NULL;
-
-	// Collect memory as needed
-	void *stack_pointer = get_bp();
-	//TODO: Reorder check_collect to collect before large alloc
-	_check_collect(stack_pointer);
 
 	void *ptr = _inner_realloc(NULL, size);
 
@@ -127,7 +132,7 @@ void free(void *ptr)
 		return;
 	}
 
-	CGC_PUBLIC_ENTER();
+	CGC_PUBLIC_ENTER(NO_GC);
 
 	_inner_free(ptr);
 
@@ -141,15 +146,10 @@ void *calloc(size_t n, size_t size)
 		return real_calloc(n, size);
 	}
 
-	CGC_PUBLIC_ENTER();
+	CGC_PUBLIC_ENTER(DO_GC);
 
 	//TODO: Handle case where overflow would occur
 	size_t final_size = n * size;
-
-	// Collect memory as needed
-	void *stack_pointer = get_bp();
-	//TODO: Reorder check_collect to collect before large alloc
-	_check_collect(stack_pointer);
 
 	void *ptr = _inner_realloc(NULL, size);
 	memset(ptr, 0, size);
@@ -165,7 +165,7 @@ void *realloc(void *p, size_t size)
 		return real_realloc(p, size);
 	}
 
-	CGC_PUBLIC_ENTER();
+	CGC_PUBLIC_ENTER(DO_GC);
 
 	void *new_ptr;
 	if (size == 0)
@@ -189,7 +189,7 @@ void *reallocarray(void *p, size_t n, size_t size)
 		return real_reallocarray(p, n, size);
 	}
 
-	CGC_PUBLIC_ENTER();
+	CGC_PUBLIC_ENTER(DO_GC);
 
 	void *new_ptr;
 	//TODO: Handle case where overflow would occur
@@ -207,17 +207,6 @@ void *reallocarray(void *p, size_t n, size_t size)
 	CGC_PUBLIC_EXIT();
 	return new_ptr;
 }
-
-void cgc_collect()
-{
-	CGC_PUBLIC_ENTER();
-
-	void *stack_pointer = get_bp();
-	_collect(stack_pointer);
-
-	CGC_PUBLIC_EXIT();
-}
-
 
 
 
@@ -241,7 +230,7 @@ static void _init()
 static void _cleanup()
 {
 	//NOTE: While not 'public' interface, still needs in_cgc guard
-	CGC_PUBLIC_ENTER();
+	CGC_PUBLIC_ENTER(NO_GC);
 
 	//Run normal free to cleanup left-over allocs
 	hashtable_destroy_free(allocs, real_free, NULL);

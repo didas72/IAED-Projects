@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cgc.h"
-
 void *f1()
 {
 	int **p1 = malloc(4*sizeof(int*));
