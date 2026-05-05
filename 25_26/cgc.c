@@ -254,6 +254,8 @@ static void cleanup()
 	//NOTE: While not 'public' interface, still needs in_cgc guard
 	CGC_PUBLIC_ENTER(NO_GC);
 
+	LOG_COLOR(COLOR_DARK_MAGENTA, COLOR_DEFAULT, 0, "[CGC] Cleanup at shutdown\n");
+
 	//Run normal free to cleanup left-over allocs
 	hashtable_destroy_free(allocs, real_free, NULL);
 
