@@ -24,14 +24,47 @@
 } while(0)
 #define CGC_PUBLIC_EXIT() do { in_cgc = 0; } while(0)
 
-#ifdef USE_DEBUG_LOG
-#define LOG(fmt...) do { printf(fmt); } while(0)
-#define LOG_COLOR(fg, bg, bold, fmt...) do { set_color(fg, bg, bold); LOG(fmt); set_color(COLOR_DEFAULT, COLOR_DEFAULT, 0); } while (0)
+#ifdef CGC_DEBUG_LOG
+#define _DBG_OUT(fmt...) do { fprintf(stderr, fmt); } while (0)
 #else
 // Empty on purpose
-#define LOG(fmt...)
-#define LOG_COLOR(fg, bg, bold, fmt...)
+#define _DBG_OUT(fmt...)
 #endif
+
+#define _SET_COLOR(fg, bg) do { _DBG_OUT("\033[0;%dm\033[%dm", fg, bg + 10); } while (0)
+
+#define DBG_LOG_COLOR2(fg, bg, fmt...) do { _SET_COLOR(fg, bg); _DBG_OUT(fmt); _SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT); } while (0)
+#define DBG_LOG_COLOR1(fg, fmt...) do { _SET_COLOR(fg, COLOR_DEFAULT); _DBG_OUT(fmt); _SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT); } while (0)
+
+#define DBG_TRACE(fmt...) do { /*DBG_LOG_COLOR1(COLOR_DARK_GRAY, "[CGC] Trace: " fmt);*/ } while(0)
+#define DBG_INFO(fmt...) do { DBG_LOG_COLOR1(COLOR_WHITE, "[CGC] Info: " fmt); } while(0)
+#define DBG_INFO_GOOD(fmt...) do { DBG_LOG_COLOR1(COLOR_GREEN, "[CGC] Info: " fmt); } while(0)
+#define DBG_WARN(fmt...) do { DBG_LOG_COLOR1(COLOR_DARK_YELLOW, "[CGC] Warn: " fmt); } while(0)
+#define DBG_ERR(fmt...) do { DBG_LOG_COLOR1(COLOR_RED, "[CGC] Warn: " fmt); } while(0)
+
+
+// === Terminal colors ===
+
+enum TERM_COLOR
+{
+	COLOR_DEFAULT = 39,
+	COLOR_BLACK = 30,
+	COLOR_DARK_RED= 31,
+	COLOR_DARK_GREEN = 32,
+	COLOR_DARK_YELLOW = 33,
+	COLOR_DARK_BLUE = 34,
+	COLOR_DARK_MAGENTA = 35,
+	COLOR_DARK_CYAN = 36,
+	COLOR_LIGHT_GRAY = 37,
+	COLOR_DARK_GRAY = 90,
+	COLOR_RED = 91,
+	COLOR_GREEN = 92,
+	COLOR_ORANGE = 93,
+	COLOR_BLUE = 94,
+	COLOR_MAGENTA = 95,
+	COLOR_CYAN = 96,
+	COLOR_WHITE = 97,
+};
 
 
 
@@ -73,29 +106,6 @@ static void collect(void *stack_pointer);
 static void mark(hashset_t *marked, void *stack_pointer);
 static void sweep(hashset_t *marked);
 static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
-
-enum TERM_COLOR
-{
-	COLOR_DEFAULT = 39,
-	COLOR_BLACK = 30,
-	COLOR_DARK_RED= 31,
-	COLOR_DARK_GREEN = 32,
-	COLOR_DARK_YELLOW = 33,
-	COLOR_DARK_BLUE = 34,
-	COLOR_DARK_MAGENTA = 35,
-	COLOR_DARK_CYAN = 36,
-	COLOR_LIGHT_GRAY = 37,
-	COLOR_DARK_GRAY = 90,
-	COLOR_RED = 91,
-	COLOR_GREEN = 92,
-	COLOR_ORANGE = 93,
-	COLOR_BLUE = 94,
-	COLOR_MAGENTA = 95,
-	COLOR_CYAN = 96,
-	COLOR_WHITE = 97,
-};
-
-static void set_color(int fg, int bg, char bold);
 
 
 
@@ -254,7 +264,7 @@ static void cleanup()
 	//NOTE: While not 'public' interface, still needs in_cgc guard
 	CGC_PUBLIC_ENTER(NO_GC);
 
-	LOG_COLOR(COLOR_DARK_MAGENTA, COLOR_DEFAULT, 0, "[CGC] Cleanup at shutdown\n");
+	DBG_INFO_GOOD("[CGC] Cleanup at shutdown\n");
 
 	//Run normal free to cleanup left-over allocs
 	hashtable_destroy_free(allocs, real_free, NULL);
@@ -272,8 +282,6 @@ static void *inner_realloc(void *ptr, size_t size)
 
 	// Allocate the memory
 	void *new_ptr = real_realloc(ptr, size);
-
-	LOG_COLOR(COLOR_DARK_BLUE, COLOR_DEFAULT, 0, "[CGC] %p=alloc(%lu)\n", new_ptr, size);
 
 	// Failed (re)allocations shouldn't change any state
 	if (new_ptr == NULL)
@@ -316,7 +324,7 @@ static void check_collect(void *stack_pointer)
 		(allocs_since_collect * 2) <= hashtable_get_count(allocs)) // Not doubled allocs
 		return;
 
-	LOG("[CGC] Autocollect (size=%lu/%lu; count=%lu/%lu)\n", allocd_size_since_collect, total_allocated, allocs_since_collect, hashtable_get_count(allocs));
+	DBG_INFO("[CGC] Autocollect (size=%lu/%lu; count=%lu/%lu)\n", allocd_size_since_collect, total_allocated, allocs_since_collect, hashtable_get_count(allocs));
 	collect(stack_pointer);
 }
 
@@ -340,7 +348,7 @@ static void collect(void *stack_pointer)
 /// @param marked hashset_t<void*>
 static void mark(hashset_t *marked, void *stack_pointer)
 {
-	LOG("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
+	DBG_INFO("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
 
 	//ivector_t<void*>
 	ivector_t *ptrs = hashtable_list_keys(allocs);
@@ -362,7 +370,7 @@ static void mark(hashset_t *marked, void *stack_pointer)
 
 		if (ptr != NULL && ptr > (void*)0x500000000000 && ptr < (void*)0x7f0000000000)
 		{
-			LOG_COLOR(COLOR_DARK_GRAY, COLOR_DEFAULT, 0, "[CGC] Checking stack pointer at %p: %p\n", cur_stack, ptr);
+			DBG_TRACE("[CGC] Checking stack pointer at %p: %p\n", cur_stack, ptr);
 		}
 		recursive_mark(marked, ptr, ptr_v, size_v, alloc_count, 0);
 	}
@@ -380,7 +388,7 @@ static void sweep(hashset_t *marked)
 	size_t alloc_count = ivector_get_count(all_allocs);
 	size_t marked_count = hashset_get_count(marked);
 	size_t to_sweep = alloc_count-marked_count;
-	LOG_COLOR(COLOR_GREEN, COLOR_DEFAULT, 0, "[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
+	DBG_INFO_GOOD("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
 
 	void **allocs_v = ivector_as_pointer(all_allocs);
 	for (size_t i = 0; i < alloc_count && to_sweep != 0; ++i)
@@ -414,7 +422,7 @@ static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *s
 	{
 		alloc_base = ptr;
 		hashset_add(marked, ptr);
-		LOG("[CGC] Marked base %p (lvl=%d)\n", alloc_base, lvl);
+		DBG_TRACE("[CGC] Marked base %p (lvl=%d)\n", alloc_base, lvl);
 	}
 	// Linear search in case of not being a base
 	else for (i = 0; i < alloc_count; ++i)
@@ -430,7 +438,7 @@ static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *s
 			return;
 
 		hashset_add(marked, alloc_base);
-		LOG("[CGC] Marked %p by offset %p (lvl=%d)\n", alloc_base, ptr, lvl);
+		DBG_TRACE("[CGC] Marked %p by offset %p (lvl=%d)\n", alloc_base, ptr, lvl);
 		break;
 	}
 
@@ -456,9 +464,4 @@ static void *get_stack_base()
     pthread_attr_getstack(&attr, &base, &size);
     pthread_attr_destroy(&attr);
 	return (uint8_t*)base+size;
-}
-
-static void set_color(int fg, int bg, char bold)
-{
-	printf("\033[%d;%dm\033[%dm", bold, fg, bg + 10);
 }
