@@ -7,7 +7,7 @@ VAL_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes -s
 DIR_SRC=src
 DIR_INC=include
 DIR_BUILD=build
-DEPS=sus
+DEPS=sus dl
 
 OUTBIN=$(DIR_BUILD)/bin/main
 

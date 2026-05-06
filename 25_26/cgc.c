@@ -1,9 +1,11 @@
+
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define _GNU_SOURCE
 #include <dlfcn.h>
+#include <link.h>
+#include <pthread.h>
 
 #include <sus/hashtable.h>
 #include <sus/hashset.h>
@@ -106,8 +108,10 @@ static void *get_stack_base();
 static void check_collect(void *stack_pointer);
 static void collect(void *stack_pointer);
 static void mark(hashset_t *marked, void *stack_pointer);
-static void sweep(hashset_t *marked);
+static void mark_span(hashset_t *marked, void *start, size_t len);
+static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *data);
 static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
+static void sweep(hashset_t *marked);
 
 
 
@@ -356,18 +360,67 @@ static void collect(void *stack_pointer)
 	allocd_size_since_collect = 0;
 }
 
+extern int __bss_start;
+
 /// @brief Populates marked with the allocs found to be referenced
 /// @param marked hashset_t<void*>
 static void mark(hashset_t *marked, void *stack_pointer)
 {
-	DBG_INFO("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
+	DBG_INFO("Stack marking from %p to %p\n", stack_pointer, stack_base);
 	mark_span(marked, stack_pointer, (char *)stack_base - (char *)stack_pointer);
 
-	//TODO: Mark dl_iterate_phdr .bss and .data
+	DBG_INFO("Marking bss'es and data's\n");
+	printf("Expecting %ld offset for allocs\n", (char *)&allocs - (char *)&__bss_start);
+	printf("Expecting bss @%p\n", &__bss_start);
+	// Mark .bss and .data for each loaded binary
+	dl_iterate_phdr(dl_iterate_callback, marked);
+}
+
+static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *data)
+{ (void)size;
+	//hashset_t<void*>
+	hashset_t *marked = data;
+	(void)marked;
+
+	_SET_COLOR(COLOR_BLUE, COLOR_DEFAULT);
+	printf("Object '%s' @0x%016lx has %d headers\n", info->dlpi_name, info->dlpi_addr, info->dlpi_phnum);
+	_SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT);
+
+	for (int i = 0; i < info->dlpi_phnum; ++i)
+	{
+		if (info->dlpi_phdr[i].p_type != PT_LOAD ||
+			(info->dlpi_phdr[i].p_flags & PF_X) != 0 ||
+			(info->dlpi_phdr[i].p_flags & PF_R) == 0)
+			continue;
+
+		void *segment_start = (void *)(info->dlpi_addr + info->dlpi_phdr[i].p_vaddr);
+		void *segment_end = (void *)((char*)segment_start + info->dlpi_phdr[i].p_memsz);
+		printf("%d: Segment estimated start @%p end @%p\n", i, segment_start, segment_end);
+		if (segment_start < (void *)&allocs && (void *)&allocs < segment_end)
+		{
+			_SET_COLOR(COLOR_GREEN, COLOR_DEFAULT);
+			printf("=== FOUND SELF ===\n");
+			_SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT);
+		}
+
+		char *estimated_allocs = (char*)segment_start + ((char*)&allocs - (char*)&__bss_start);
+		printf("Estimating %p vs real %p (diff = %ld)\n", estimated_allocs, &allocs, estimated_allocs - (char *)&allocs);
+		if (estimated_allocs == (char *)&allocs)
+		{
+			printf("Pointers match\n");
+
+			if (*(void**)estimated_allocs == allocs)
+				printf("Values match\n");
+		}
+	}
+
+	return 0;
 }
 
 static void mark_span(hashset_t *marked, void *start, size_t len)
 {
+	void **end = (void**)((char*)start+len);
+
 	//ivector_t<void*>
 	ivector_t *ptrs = hashtable_list_keys(allocs);
 	void **ptr_v = ivector_as_pointer(ptrs);
@@ -377,7 +430,7 @@ static void mark_span(hashset_t *marked, void *start, size_t len)
 
 	size_t alloc_count = ivector_get_count(ptrs);
 
-	for (void **cur_stack = start; cur_stack < (void**)stack_base; ++cur_stack)
+	for (void **cur_stack = start; cur_stack < end; ++cur_stack)
 	{
 		void *ptr = *cur_stack;
 
@@ -386,31 +439,6 @@ static void mark_span(hashset_t *marked, void *start, size_t len)
 
 	ivector_destroy(ptrs);
 	ivector_destroy(sizes);
-}
-
-/// @param marked hashset_t<void*>
-static void sweep(hashset_t *marked)
-{
-	//ivector_t<void *>
-	ivector_t *all_allocs = hashtable_list_keys(allocs);
-
-	size_t alloc_count = ivector_get_count(all_allocs);
-	size_t marked_count = hashset_get_count(marked);
-	size_t to_sweep = alloc_count - marked_count;
-	DBG_INFO_GOOD("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
-
-	void **allocs_v = ivector_as_pointer(all_allocs);
-	for (size_t i = 0; i < alloc_count && to_sweep != 0; ++i)
-	{
-		if (!hashset_contains(marked, allocs_v[i]))
-		{
-			DBG_TRACE("Sweeping %p\n", allocs_v[i]);
-			inner_free(allocs_v[i]);
-			--to_sweep;
-		}
-	}
-
-	ivector_destroy(all_allocs);
 }
 
 static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl)
@@ -468,8 +496,30 @@ static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *s
 	}
 }
 
-#define __USE_GNU
-#include <pthread.h>
+/// @param marked hashset_t<void*>
+static void sweep(hashset_t *marked)
+{
+	//ivector_t<void *>
+	ivector_t *all_allocs = hashtable_list_keys(allocs);
+
+	size_t alloc_count = ivector_get_count(all_allocs);
+	size_t marked_count = hashset_get_count(marked);
+	size_t to_sweep = alloc_count - marked_count;
+	DBG_INFO_GOOD("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
+
+	void **allocs_v = ivector_as_pointer(all_allocs);
+	for (size_t i = 0; i < alloc_count && to_sweep != 0; ++i)
+	{
+		if (!hashset_contains(marked, allocs_v[i]))
+		{
+			DBG_TRACE("Sweeping %p\n", allocs_v[i]);
+			inner_free(allocs_v[i]);
+			--to_sweep;
+		}
+	}
+
+	ivector_destroy(all_allocs);
+}
 
 static void *get_stack_base()
 {
