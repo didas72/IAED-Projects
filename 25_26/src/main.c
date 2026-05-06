@@ -4,9 +4,6 @@
 #include "cli.h"
 #include "commands.h"
 
-//TODO: Tracked variables with trk_<type>
-// Use typedef ivector_t trk_ivector_t
-
 int main(int argc, char *argv[])
 {
 	(void)argc;

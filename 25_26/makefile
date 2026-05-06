@@ -1,6 +1,7 @@
 CC=gcc
 LD=ld
 C_FLAGS=-Wall -Wextra -Wno-unused-result -O0 -ggdb -DSUS_TARGET_VERSION=10000 -DCGC_DEBUG_LOG
+GDB_FLAGS=
 VAL_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes -s
 
 DIR_SRC=src
@@ -45,10 +46,10 @@ $(CGC): cgc.c
 	$(LD) -r $(DIR_BUILD)/obj/cgc.o -L/usr/local/lib -lsus -o $(DIR_BUILD)/obj/cgc.so.o
 	$(CC) $(DIR_BUILD)/obj/cgc.so.o -shared -o $@
 
-dbg: $(DBG_BIN)
-	gdb $(GDB_FLAGS) ./$(OUTBIN)
+dbg: $(OUTBIN)
+	gdb $(GDB_FLAGS) -ex "set exec-wrapper env LD_PRELOAD=build/lib/libcgc.so" ./$(OUTBIN)
 
-val: $(DBG_BIN)
+val: $(OUTBIN)
 	valgrind $(VAL_FLAGS) ./$(OUTBIN)
 
 clean:

@@ -8,6 +8,7 @@
 #include <sus/hashtable.h>
 #include <sus/hashset.h>
 #include <sus/hashes.h>
+#include <sus/sus.h>
 
 
 // === Internal macros ===
@@ -36,9 +37,10 @@
 #define DBG_LOG_COLOR2(fg, bg, fmt...) do { _SET_COLOR(fg, bg); _DBG_OUT(fmt); _SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT); } while (0)
 #define DBG_LOG_COLOR1(fg, fmt...) do { _SET_COLOR(fg, COLOR_DEFAULT); _DBG_OUT(fmt); _SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT); } while (0)
 
-#define DBG_TRACE(fmt...) do { /*DBG_LOG_COLOR1(COLOR_DARK_GRAY, "[CGC] Trace: " fmt);*/ } while(0)
+#define DBG_TRACE(fmt...) do { DBG_LOG_COLOR1(COLOR_DARK_GRAY, "[CGC] Trace: " fmt); } while(0)
 #define DBG_INFO(fmt...) do { DBG_LOG_COLOR1(COLOR_WHITE, "[CGC] Info: " fmt); } while(0)
 #define DBG_INFO_GOOD(fmt...) do { DBG_LOG_COLOR1(COLOR_GREEN, "[CGC] Info: " fmt); } while(0)
+#define DBG_INFO_CALL(fmt...) do { DBG_LOG_COLOR1(COLOR_BLUE, "[CGC] Call: " fmt); } while(0)
 #define DBG_WARN(fmt...) do { DBG_LOG_COLOR1(COLOR_DARK_YELLOW, "[CGC] Warn: " fmt); } while(0)
 #define DBG_ERR(fmt...) do { DBG_LOG_COLOR1(COLOR_RED, "[CGC] Warn: " fmt); } while(0)
 
@@ -119,6 +121,7 @@ void *malloc(size_t size)
 	}
 
 	CGC_PUBLIC_ENTER(DO_GC);
+	DBG_INFO_CALL("malloc(%lu)\n", size);
 	void *new_ptr;
 
 	if (size == 0)
@@ -128,6 +131,7 @@ void *malloc(size_t size)
 	}
 
 	new_ptr = inner_realloc(NULL, size);
+	DBG_INFO("malloc(%lu) -> %p\n", size, new_ptr);
 
 	//It's probably better to clear memory to avoid having left-over pointers count towards marks
 	memset(new_ptr, 0, size);
@@ -146,6 +150,7 @@ void free(void *ptr)
 	}
 
 	CGC_PUBLIC_ENTER(NO_GC);
+	DBG_INFO_CALL("free(%p)\n", ptr);
 
 	inner_free(ptr);
 
@@ -160,6 +165,7 @@ void *calloc(size_t n, size_t size)
 	}
 
 	CGC_PUBLIC_ENTER(DO_GC);
+	DBG_INFO_CALL("calloc(%lu, %lu)\n", n, size);
 	void *new_ptr;
 
 	// Prevent overflow
@@ -177,6 +183,8 @@ void *calloc(size_t n, size_t size)
 	}
 
 	new_ptr = inner_realloc(NULL, size);
+	DBG_INFO("calloc(%lu, %lu) -> %p\n", n, size, new_ptr);
+
 	memset(new_ptr, 0, size);
 
 _calloc_skip:
@@ -192,6 +200,7 @@ void *realloc(void *p, size_t size)
 	}
 
 	CGC_PUBLIC_ENTER(DO_GC);
+	DBG_INFO_CALL("realloc(%p, %lu)\n", p, size);
 
 	void *new_ptr;
 	if (size == 0)
@@ -202,6 +211,7 @@ void *realloc(void *p, size_t size)
 	}
 
 	new_ptr = inner_realloc(p, size);
+	DBG_INFO("realloc(%p, %lu) -> %p\n", p, size, new_ptr);
 
 _realloc_skip:
 	CGC_PUBLIC_EXIT();
@@ -216,6 +226,7 @@ void *reallocarray(void *p, size_t n, size_t size)
 	}
 
 	CGC_PUBLIC_ENTER(DO_GC);
+	DBG_INFO_CALL("reallocarray(%p, %lu, %lu)\n", p, n, size);
 	void *new_ptr;
 
 	// Prevent overflow
@@ -234,6 +245,7 @@ void *reallocarray(void *p, size_t n, size_t size)
 	}
 
 	new_ptr = inner_realloc(p, final_size);
+	DBG_INFO("reallocarray(%p, %lu, %lu) -> %p\n", p, n, size, new_ptr);
 
 _reallocarray_skip:
 	CGC_PUBLIC_EXIT();
@@ -289,9 +301,8 @@ static void *inner_realloc(void *ptr, size_t size)
 
 	// Track allocation
 	if (old_size == 0)
-		hashtable_add(allocs, ptr, (void*)size);
-	else
-		hashtable_set(allocs, ptr, (void*)size);
+		hashtable_remove(allocs, ptr, NULL, NULL);
+	hashtable_add(allocs, new_ptr, (void*)size);
 
 	// Update metrics for auto-collect
 	total_allocated += size - old_size;
@@ -308,7 +319,8 @@ static void inner_free(void *ptr)
 
 	// Untrack allocation
 	size_t size;
-	hashtable_remove(allocs, ptr, NULL, (void**)&size);
+	if (hashtable_remove(allocs, ptr, NULL, (void**)&size) == SUS_ENTRY_NOT_FOUND)
+		DBG_WARN("Freed pointer %p not allocated\n", ptr);
 
 	// Update metrics for auto-collect
 	total_allocated -= size;
@@ -349,7 +361,13 @@ static void collect(void *stack_pointer)
 static void mark(hashset_t *marked, void *stack_pointer)
 {
 	DBG_INFO("[CGC] Stack marking from %p to %p\n", stack_pointer, stack_base);
+	mark_span(marked, stack_pointer, (char *)stack_base - (char *)stack_pointer);
 
+	//TODO: Mark dl_iterate_phdr .bss and .data
+}
+
+static void mark_span(hashset_t *marked, void *start, size_t len)
+{
 	//ivector_t<void*>
 	ivector_t *ptrs = hashtable_list_keys(allocs);
 	void **ptr_v = ivector_as_pointer(ptrs);
@@ -359,19 +377,10 @@ static void mark(hashset_t *marked, void *stack_pointer)
 
 	size_t alloc_count = ivector_get_count(ptrs);
 
-	for (void **cur_stack = stack_pointer; cur_stack < (void**)stack_base; ++cur_stack)
+	for (void **cur_stack = start; cur_stack < (void**)stack_base; ++cur_stack)
 	{
 		void *ptr = *cur_stack;
 
-		// Skip stack pointers
-		//REVIEW: still a lot of them remain, how to fix?
-		if (ptr < stack_base && ptr > stack_pointer)
-			continue;
-
-		if (ptr != NULL && ptr > (void*)0x500000000000 && ptr < (void*)0x7f0000000000)
-		{
-			DBG_TRACE("[CGC] Checking stack pointer at %p: %p\n", cur_stack, ptr);
-		}
 		recursive_mark(marked, ptr, ptr_v, size_v, alloc_count, 0);
 	}
 
@@ -387,7 +396,7 @@ static void sweep(hashset_t *marked)
 
 	size_t alloc_count = ivector_get_count(all_allocs);
 	size_t marked_count = hashset_get_count(marked);
-	size_t to_sweep = alloc_count-marked_count;
+	size_t to_sweep = alloc_count - marked_count;
 	DBG_INFO_GOOD("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
 
 	void **allocs_v = ivector_as_pointer(all_allocs);
@@ -395,6 +404,7 @@ static void sweep(hashset_t *marked)
 	{
 		if (!hashset_contains(marked, allocs_v[i]))
 		{
+			DBG_TRACE("Sweeping %p\n", allocs_v[i]);
 			inner_free(allocs_v[i]);
 			--to_sweep;
 		}
@@ -411,18 +421,24 @@ static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *s
 
 	// Skip NULL and low values (likely integer)
 	if (ptr < (void*)0x10000)
+	{
+		if (ptr != NULL) DBG_TRACE("Not marking %p (too low)\n", ptr);
 		return;
+	}
 
 	// Skip base of allocations already marked without search
 	if (hashset_contains(marked, ptr))
+	{
+		DBG_TRACE("Not marking %pd (already marked)\n", ptr);
 		return;
+	}
 
 	// Mark base of allocations without linear search
 	if ((alloc_size = (size_t)hashtable_get(allocs, ptr)) != 0) // Relies on no zero-sized allocs
 	{
 		alloc_base = ptr;
+		DBG_TRACE("[CGC] Marking base %p (lvl=%d)\n", alloc_base, lvl);
 		hashset_add(marked, ptr);
-		DBG_TRACE("[CGC] Marked base %p (lvl=%d)\n", alloc_base, lvl);
 	}
 	// Linear search in case of not being a base
 	else for (i = 0; i < alloc_count; ++i)
@@ -437,8 +453,8 @@ static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *s
 		if (hashset_contains(marked, alloc_base))
 			return;
 
+		DBG_TRACE("[CGC] Marking %p by offset %p (lvl=%d)\n", alloc_base, ptr, lvl);
 		hashset_add(marked, alloc_base);
-		DBG_TRACE("[CGC] Marked %p by offset %p (lvl=%d)\n", alloc_base, ptr, lvl);
 		break;
 	}
 
