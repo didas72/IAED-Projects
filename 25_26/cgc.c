@@ -1,3 +1,4 @@
+int first_var;
 
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -39,7 +40,11 @@
 #define DBG_LOG_COLOR2(fg, bg, fmt...) do { _SET_COLOR(fg, bg); _DBG_OUT(fmt); _SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT); } while (0)
 #define DBG_LOG_COLOR1(fg, fmt...) do { _SET_COLOR(fg, COLOR_DEFAULT); _DBG_OUT(fmt); _SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT); } while (0)
 
+#ifdef CGC_DEBUG_TRACE
 #define DBG_TRACE(fmt...) do { DBG_LOG_COLOR1(COLOR_DARK_GRAY, "[CGC] Trace: " fmt); } while(0)
+#else
+#define DBG_TRACE(fmt...) do { } while(0)
+#endif
 #define DBG_INFO(fmt...) do { DBG_LOG_COLOR1(COLOR_WHITE, "[CGC] Info: " fmt); } while(0)
 #define DBG_INFO_GOOD(fmt...) do { DBG_LOG_COLOR1(COLOR_GREEN, "[CGC] Info: " fmt); } while(0)
 #define DBG_INFO_CALL(fmt...) do { DBG_LOG_COLOR1(COLOR_BLUE, "[CGC] Call: " fmt); } while(0)
@@ -360,18 +365,16 @@ static void collect(void *stack_pointer)
 	allocd_size_since_collect = 0;
 }
 
-extern int __bss_start;
-
 /// @brief Populates marked with the allocs found to be referenced
 /// @param marked hashset_t<void*>
 static void mark(hashset_t *marked, void *stack_pointer)
 {
+	//FIXME: We don't mark pointers in registers (FML)
+
 	DBG_INFO("Stack marking from %p to %p\n", stack_pointer, stack_base);
 	mark_span(marked, stack_pointer, (char *)stack_base - (char *)stack_pointer);
 
 	DBG_INFO("Marking bss'es and data's\n");
-	printf("Expecting %ld offset for allocs\n", (char *)&allocs - (char *)&__bss_start);
-	printf("Expecting bss @%p\n", &__bss_start);
 	// Mark .bss and .data for each loaded binary
 	dl_iterate_phdr(dl_iterate_callback, marked);
 }
@@ -380,38 +383,19 @@ static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *dat
 { (void)size;
 	//hashset_t<void*>
 	hashset_t *marked = data;
-	(void)marked;
-
-	_SET_COLOR(COLOR_BLUE, COLOR_DEFAULT);
-	printf("Object '%s' @0x%016lx has %d headers\n", info->dlpi_name, info->dlpi_addr, info->dlpi_phnum);
-	_SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT);
 
 	for (int i = 0; i < info->dlpi_phnum; ++i)
 	{
 		if (info->dlpi_phdr[i].p_type != PT_LOAD ||
 			(info->dlpi_phdr[i].p_flags & PF_X) != 0 ||
-			(info->dlpi_phdr[i].p_flags & PF_R) == 0)
+			(info->dlpi_phdr[i].p_flags & PF_R) == 0 ||
+			(info->dlpi_phdr[i].p_flags & PF_W) == 0)
 			continue;
 
 		void *segment_start = (void *)(info->dlpi_addr + info->dlpi_phdr[i].p_vaddr);
-		void *segment_end = (void *)((char*)segment_start + info->dlpi_phdr[i].p_memsz);
-		printf("%d: Segment estimated start @%p end @%p\n", i, segment_start, segment_end);
-		if (segment_start < (void *)&allocs && (void *)&allocs < segment_end)
-		{
-			_SET_COLOR(COLOR_GREEN, COLOR_DEFAULT);
-			printf("=== FOUND SELF ===\n");
-			_SET_COLOR(COLOR_DEFAULT, COLOR_DEFAULT);
-		}
 
-		char *estimated_allocs = (char*)segment_start + ((char*)&allocs - (char*)&__bss_start);
-		printf("Estimating %p vs real %p (diff = %ld)\n", estimated_allocs, &allocs, estimated_allocs - (char *)&allocs);
-		if (estimated_allocs == (char *)&allocs)
-		{
-			printf("Pointers match\n");
-
-			if (*(void**)estimated_allocs == allocs)
-				printf("Values match\n");
-		}
+		DBG_INFO("Marking program header %d of '%s'.\n", i, info->dlpi_name);
+		mark_span(marked, segment_start, info->dlpi_phdr[i].p_memsz);
 	}
 
 	return 0;
