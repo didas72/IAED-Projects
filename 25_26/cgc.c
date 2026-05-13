@@ -2,6 +2,7 @@ int first_var;
 
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
@@ -18,7 +19,6 @@ int first_var;
 #define NO_GC 0
 #define DO_GC 1
 #define CGC_PUBLIC_ENTER(do_gc) do { \
-	in_cgc = 1; \
 	if (allocs == NULL) { \
 		init(); \
 	} \
@@ -26,7 +26,7 @@ int first_var;
 		check_collect(get_bp()); \
 	} \
 } while(0)
-#define CGC_PUBLIC_EXIT() do { in_cgc = 0; } while(0)
+#define CGC_PUBLIC_EXIT() do { _cgc_in_gc = 0; } while(0)
 
 #ifdef CGC_DEBUG_LOG
 #define _DBG_OUT(fmt...) do { fprintf(stderr, fmt); } while (0)
@@ -80,14 +80,14 @@ enum TERM_COLOR
 // === Internal state ===
 
 // Actual libc memory functions
-static void *(*real_malloc)(size_t) = NULL;
-static void *(*real_calloc)(size_t, size_t) = NULL;
-static void (*real_free)(void *) = NULL;
-static void *(*real_realloc)(void *, size_t) = NULL;
-static void *(*real_reallocarray)(void *, size_t, size_t) = NULL;
+extern void *(*_cgc_real_malloc)(size_t);
+extern void *(*_cgc_real_calloc)(size_t, size_t);
+extern void (*_cgc_real_free)(void *);
+extern void *(*_cgc_real_realloc)(void *, size_t);
+extern void *(*_cgc_real_reallocarray)(void *, size_t, size_t);
 
-// Recursion guards (mostly for libsus)
-static int in_cgc = 0;
+// Recursion guards
+extern int _cgc_in_gc;
 
 //hashtable_t<void*, size_t>
 static hashtable_t *allocs = NULL;
@@ -97,6 +97,14 @@ static void *stack_base = NULL;
 static size_t allocs_since_collect = 0;
 static size_t total_allocated = 0;
 static size_t allocd_size_since_collect = 0;
+
+
+
+// === Low-Level symbols for register storage ===
+
+// Callee saved registers (rbx, r12-15)
+#define CALLEE_REGISTER_COUNT 5
+extern uint64_t _cgc_callee_registers[CALLEE_REGISTER_COUNT];
 
 
 
@@ -114,6 +122,7 @@ static void check_collect(void *stack_pointer);
 static void collect(void *stack_pointer);
 static void mark(hashset_t *marked, void *stack_pointer);
 static void mark_span(hashset_t *marked, void *start, size_t len);
+static void mark_callee_registers(hashset_t *marked);
 static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *data);
 static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl);
 static void sweep(hashset_t *marked);
@@ -124,11 +133,6 @@ static void sweep(hashset_t *marked);
 
 void *cgc_malloc(size_t size)
 {
-	if (in_cgc)
-	{
-		return real_malloc(size);
-	}
-
 	CGC_PUBLIC_ENTER(DO_GC);
 	DBG_INFO_CALL("malloc(%lu)\n", size);
 	void *new_ptr;
@@ -152,12 +156,6 @@ _malloc_skip:
 
 void cgc_free(void *ptr)
 {
-	if (in_cgc)
-	{
-		real_free(ptr);
-		return;
-	}
-
 	CGC_PUBLIC_ENTER(NO_GC);
 	DBG_INFO_CALL("free(%p)\n", ptr);
 
@@ -168,11 +166,6 @@ void cgc_free(void *ptr)
 
 void *cgc_calloc(size_t n, size_t size)
 {
-	if (in_cgc)
-	{
-		return real_calloc(n, size);
-	}
-
 	CGC_PUBLIC_ENTER(DO_GC);
 	DBG_INFO_CALL("calloc(%lu, %lu)\n", n, size);
 	void *new_ptr;
@@ -203,11 +196,6 @@ _calloc_skip:
 
 void *cgc_realloc(void *p, size_t size)
 {
-	if (in_cgc)
-	{
-		return real_realloc(p, size);
-	}
-
 	CGC_PUBLIC_ENTER(DO_GC);
 	DBG_INFO_CALL("realloc(%p, %lu)\n", p, size);
 
@@ -229,11 +217,6 @@ _realloc_skip:
 
 void *cgc_reallocarray(void *p, size_t n, size_t size)
 {
-	if (in_cgc)
-	{
-		return real_reallocarray(p, n, size);
-	}
-
 	CGC_PUBLIC_ENTER(DO_GC);
 	DBG_INFO_CALL("reallocarray(%p, %lu, %lu)\n", p, n, size);
 	void *new_ptr;
@@ -267,12 +250,14 @@ _reallocarray_skip:
 
 static void init()
 {
+	_cgc_in_gc = 1;
+
 	// Real function setup MUST be the first thing to run
-	real_malloc = dlsym(RTLD_NEXT, "malloc");
-	real_calloc = dlsym(RTLD_NEXT, "calloc");
-	real_free = dlsym(RTLD_NEXT, "free");
-	real_realloc = dlsym(RTLD_NEXT, "realloc");
-	real_reallocarray = dlsym(RTLD_NEXT, "reallocarray");
+	_cgc_real_malloc = dlsym(RTLD_NEXT, "malloc");
+	_cgc_real_calloc = dlsym(RTLD_NEXT, "calloc");
+	_cgc_real_free = dlsym(RTLD_NEXT, "free");
+	_cgc_real_realloc = dlsym(RTLD_NEXT, "realloc");
+	_cgc_real_reallocarray = dlsym(RTLD_NEXT, "reallocarray");
 
 	allocs = hashtable_create(hash_ptr, compare_ptr);
 	stack_base = get_stack_base();
@@ -283,12 +268,15 @@ static void init()
 static void cleanup()
 {
 	//NOTE: While not 'public' interface, still needs in_cgc guard
+	_cgc_in_gc = 1;
 	CGC_PUBLIC_ENTER(NO_GC);
 
-	DBG_INFO_GOOD("[CGC] Cleanup at shutdown\n");
+	DBG_INFO_GOOD("Cleanup at shutdown\n");
+	size_t leftover = hashtable_get_count(allocs);
+	DBG_INFO("%ld allocations left-over\n", leftover);
 
 	//Run normal free to cleanup left-over allocs
-	hashtable_destroy_free(allocs, real_free, NULL);
+	hashtable_destroy_free(allocs, _cgc_real_free, NULL);
 
 	CGC_PUBLIC_EXIT();
 }
@@ -302,7 +290,7 @@ static void *inner_realloc(void *ptr, size_t size)
 		old_size = (size_t)hashtable_get(allocs, ptr);
 
 	// Allocate the memory
-	void *new_ptr = real_realloc(ptr, size);
+	void *new_ptr = _cgc_real_realloc(ptr, size);
 
 	// Failed (re)allocations shouldn't change any state
 	if (new_ptr == NULL)
@@ -324,7 +312,7 @@ static void *inner_realloc(void *ptr, size_t size)
 static void inner_free(void *ptr)
 {
 	// Free the memory
-	real_free(ptr);
+	_cgc_real_free(ptr);
 
 	// Untrack allocation
 	size_t size;
@@ -345,7 +333,7 @@ static void check_collect(void *stack_pointer)
 		(allocs_since_collect * 2) <= hashtable_get_count(allocs)) // Not doubled allocs
 		return;
 
-	DBG_INFO("[CGC] Autocollect (size=%lu/%lu; count=%lu/%lu)\n", allocd_size_since_collect, total_allocated, allocs_since_collect, hashtable_get_count(allocs));
+	DBG_INFO("Autocollect (size=%lu/%lu; count=%lu/%lu)\n", allocd_size_since_collect, total_allocated, allocs_since_collect, hashtable_get_count(allocs));
 	collect(stack_pointer);
 }
 
@@ -369,7 +357,8 @@ static void collect(void *stack_pointer)
 /// @param marked hashset_t<void*>
 static void mark(hashset_t *marked, void *stack_pointer)
 {
-	//FIXME: We don't mark pointers in registers (FML)
+	DBG_INFO("Marking registers\n");
+	mark_callee_registers(marked);
 
 	DBG_INFO("Stack marking from %p to %p\n", stack_pointer, stack_base);
 	mark_span(marked, stack_pointer, (char *)stack_base - (char *)stack_pointer);
@@ -377,6 +366,18 @@ static void mark(hashset_t *marked, void *stack_pointer)
 	DBG_INFO("Marking bss'es and data's\n");
 	// Mark .bss and .data for each loaded binary
 	dl_iterate_phdr(dl_iterate_callback, marked);
+}
+
+/// @param marked hashset_t<void*>
+static void mark_callee_registers(hashset_t *marked)
+{
+	for (int i = 0; i < CALLEE_REGISTER_COUNT; ++i)
+	{
+		mark_span(marked, (void*)&_cgc_callee_registers[i], sizeof(uint64_t));
+		size_t marks = hashset_get_count(marked);
+		DBG_INFO("Have %ld marks after registers[%d]=0x%lx\n", marks, i, _cgc_callee_registers[i]);
+	}
+
 }
 
 static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *data)
@@ -401,6 +402,7 @@ static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *dat
 	return 0;
 }
 
+/// @param marked hashset_t<void*>
 static void mark_span(hashset_t *marked, void *start, size_t len)
 {
 	void **end = (void**)((char*)start+len);
@@ -425,6 +427,7 @@ static void mark_span(hashset_t *marked, void *start, size_t len)
 	ivector_destroy(sizes);
 }
 
+/// @param marked hashset_t<void*>
 static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *size_v, size_t alloc_count, int lvl)
 {
 	uint8_t *alloc_base;
@@ -449,7 +452,7 @@ static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *s
 	if ((alloc_size = (size_t)hashtable_get(allocs, ptr)) != 0) // Relies on no zero-sized allocs
 	{
 		alloc_base = ptr;
-		DBG_TRACE("[CGC] Marking base %p (lvl=%d)\n", alloc_base, lvl);
+		DBG_TRACE("Marking base %p (lvl=%d)\n", alloc_base, lvl);
 		hashset_add(marked, ptr);
 	}
 	// Linear search in case of not being a base
@@ -465,7 +468,7 @@ static void recursive_mark(hashset_t *marked, void *ptr, void **ptr_v, size_t *s
 		if (hashset_contains(marked, alloc_base))
 			return;
 
-		DBG_TRACE("[CGC] Marking %p by offset %p (lvl=%d)\n", alloc_base, ptr, lvl);
+		DBG_TRACE("Marking %p by offset %p (lvl=%d)\n", alloc_base, ptr, lvl);
 		hashset_add(marked, alloc_base);
 		break;
 	}
@@ -489,7 +492,7 @@ static void sweep(hashset_t *marked)
 	size_t alloc_count = ivector_get_count(all_allocs);
 	size_t marked_count = hashset_get_count(marked);
 	size_t to_sweep = alloc_count - marked_count;
-	DBG_INFO_GOOD("[CGC] Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
+	DBG_INFO_GOOD("Sweeping %lu of %lu allocs\n", to_sweep, alloc_count);
 
 	void **allocs_v = ivector_as_pointer(all_allocs);
 	for (size_t i = 0; i < alloc_count && to_sweep != 0; ++i)
