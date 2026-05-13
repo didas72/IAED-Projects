@@ -122,7 +122,7 @@ static void sweep(hashset_t *marked);
 
 // === Public implementations ===
 
-void *malloc(size_t size)
+void *cgc_malloc(size_t size)
 {
 	if (in_cgc)
 	{
@@ -150,7 +150,7 @@ _malloc_skip:
 	return new_ptr;
 }
 
-void free(void *ptr)
+void cgc_free(void *ptr)
 {
 	if (in_cgc)
 	{
@@ -166,7 +166,7 @@ void free(void *ptr)
 	CGC_PUBLIC_EXIT();
 }
 
-void *calloc(size_t n, size_t size)
+void *cgc_calloc(size_t n, size_t size)
 {
 	if (in_cgc)
 	{
@@ -201,7 +201,7 @@ _calloc_skip:
 	return new_ptr;
 }
 
-void *realloc(void *p, size_t size)
+void *cgc_realloc(void *p, size_t size)
 {
 	if (in_cgc)
 	{
@@ -227,7 +227,7 @@ _realloc_skip:
 	return new_ptr;
 }
 
-void *reallocarray(void *p, size_t n, size_t size)
+void *cgc_reallocarray(void *p, size_t n, size_t size)
 {
 	if (in_cgc)
 	{
