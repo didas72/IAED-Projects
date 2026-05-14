@@ -20,8 +20,6 @@ int main(int argc, char *argv[])
 
 		if (!handle_command(vec))
 			should_exit = true;
-
-		ivector_destroy(vec);
 	}
 
 	return 0;
