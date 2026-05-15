@@ -1,0 +1,56 @@
+#ifndef _STRUCTURES_H_
+#define _STRUCTURES_H_
+
+#include <stdint.h>
+
+#include <sus/ivector.h>
+#include <sus/ivector_utils.h>
+
+// 8 or 12 decimal digits (+ check)
+// Binary is ~40 bits (uint64_t)
+// BCD would be 6B (uint64_t)
+// String would be 13B
+typedef uint_fast64_t ean_t;
+
+// Cents
+typedef uint_fast32_t price_t;
+
+// Percentage
+typedef uint_fast8_t iva_t;
+
+// Units
+typedef uint_fast32_t quantity_t;
+
+// 9 decimal digits
+// Binary is ~30 bits (uint32_t)
+typedef uint_fast32_t nif_t;
+
+typedef struct product
+{
+	ean_t ean;
+	quantity_t stock;
+	quantity_t total_sold;
+	iva_t iva;
+	price_t price;
+	char *description;
+} product_t;
+
+typedef struct basket_entry
+{
+	product_t *product;
+	quantity_t quantity;
+} basket_entry_t;
+
+typedef struct basket
+{
+	//ivector_t<basket_entry_t*>
+	ivector_t *entries;
+} basket_t;
+
+typedef struct invoice
+{
+	nif_t nif;
+	char *client_name;
+} invoice_t;
+
+#endif

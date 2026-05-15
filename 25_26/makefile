@@ -2,7 +2,7 @@ AS=as
 CC=gcc
 LD=ld
 AS_FLAGS=-g
-C_FLAGS=-Wall -Wextra -Wno-unused-result -O0 -ggdb -DSUS_TARGET_VERSION=10000 -DCGC_DEBUG_LOG
+C_FLAGS=-Wall -Wextra -Wno-unused-result -O0 -ggdb -DSUS_TARGET_VERSION=10000
 GDB_FLAGS=
 VAL_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes -s
 
