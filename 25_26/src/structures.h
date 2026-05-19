@@ -6,11 +6,10 @@
 #include <sus/ivector.h>
 #include <sus/ivector_utils.h>
 
-// 8 or 12 decimal digits (+ check)
-// Binary is ~40 bits (uint64_t)
-// BCD would be 6B (uint64_t)
-// String would be 13B
+// 8 or 13 decimal digits (with check)
+// BCD is 6.5B (uint64_t)
 typedef uint_fast64_t ean_t;
+#define EAN_NVAL (ean_t)-1;
 
 // Cents
 typedef uint_fast32_t price_t;
