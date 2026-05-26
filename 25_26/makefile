@@ -32,7 +32,7 @@ rebuild: clean .WAIT build
 
 
 run: $(OUTBIN)
-	$(CGC_PRELOAD) ./$(OUTBIN)
+	$(CGC_PRELOAD) ./$(OUTBIN) tests/public/ivaZ.txt
 
 $(OUTBIN): $(OBJS) $(CGC)
 	@mkdir -p $(@D)
