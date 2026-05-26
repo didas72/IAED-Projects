@@ -272,8 +272,7 @@ static void cleanup()
 	CGC_PUBLIC_ENTER(NO_GC);
 
 	DBG_INFO_GOOD("Cleanup at shutdown\n");
-	size_t leftover = hashtable_get_count(allocs);
-	DBG_INFO("%ld allocations left-over\n", leftover);
+	DBG_INFO("%ld allocations left-over\n", hashtable_get_count(allocs););
 
 	//Run normal free to cleanup left-over allocs
 	hashtable_destroy_free(allocs, _cgc_real_free, NULL);
@@ -374,8 +373,7 @@ static void mark_callee_registers(hashset_t *marked)
 	for (int i = 0; i < CALLEE_REGISTER_COUNT; ++i)
 	{
 		mark_span(marked, (void*)&_cgc_callee_registers[i], sizeof(uint64_t));
-		size_t marks = hashset_get_count(marked);
-		DBG_INFO("Have %ld marks after registers[%d]=0x%lx\n", marks, i, _cgc_callee_registers[i]);
+		DBG_INFO("Have %ld marks after registers[%d]=0x%lx\n", hashset_get_count(marked), i, _cgc_callee_registers[i]);
 	}
 
 }
