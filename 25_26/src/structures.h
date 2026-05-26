@@ -9,13 +9,14 @@
 // 8 or 13 decimal digits (with check)
 // BCD is 6.5B (uint64_t)
 typedef uint_fast64_t ean_t;
-#define EAN_NVAL (ean_t)-1;
+#define EAN_NVAL ((ean_t)~0)
 
 // Cents
 typedef uint_fast32_t price_t;
 
 // Percentage
 typedef uint_fast8_t iva_t;
+#define IVA_NVAL ((iva_t)~0)
 
 // Units
 typedef uint_fast32_t quantity_t;
