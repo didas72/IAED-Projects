@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
 	}
 
 	bool should_exit = false;
-
 	while (!should_exit)
 	{
 		ivector_t *vec = get_command();
@@ -31,7 +30,7 @@ int main(int argc, char *argv[])
 		if (ivector_get_count(vec) == 0)
 			break;
 
-		if (!handle_command(vec))
+		if (!handle_command(vec, &state))
 			should_exit = true;
 	}
 

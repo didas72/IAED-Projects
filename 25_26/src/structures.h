@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 
-#include <sus/ivector.h>
-#include <sus/ivector_utils.h>
+#include <sus/hashtable.h>
 
 // 8 or 13 decimal digits (with check)
 // BCD is 6.5B (uint64_t)
@@ -41,16 +40,12 @@ typedef struct basket_entry
 	quantity_t quantity;
 } basket_entry_t;
 
-typedef struct basket
-{
-	//ivector_t<basket_entry_t*>
-	ivector_t *entries;
-} basket_t;
-
 typedef struct invoice
 {
 	nif_t nif;
 	char *client_name;
 } invoice_t;
+
+product_t *product_create(ean_t ean, quantity_t stock, iva_t iva, price_t price, char *desc);
 
 #endif

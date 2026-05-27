@@ -1,6 +1,8 @@
 #ifndef _STATE_H_
 #define _STATE_H_
 
+#include <stdbool.h>
+
 #include <sus/hashtable.h>
 #include <sus/ivector.h>
 
@@ -18,7 +20,8 @@ typedef struct state
 	//ivector_t<product_t*>
 	ivector_t *product_vec;
 
-	basket_t basket;
+	//hashtable_t<&ean_t, *basket_entry_t>
+	hashtable_t *basket;
 
 	//TODO: Review removal case: must not compact indices but may need the memory back (NULL the pointer?)
 	//ivector_t<invoice_t*>
@@ -28,5 +31,8 @@ typedef struct state
 int state_init(state_t *state);
 int state_load_iva(state_t *state, char *path);
 iva_t state_get_iva(state_t *state, char *code);
+
+bool state_product_in_basket(state_t *state, ean_t ean);
+void state_add_update_product(state_t *state, product_t *prod);
 
 #endif

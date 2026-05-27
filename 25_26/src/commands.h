@@ -5,6 +5,8 @@
 
 #include <sus/ivector.h>
 
-bool handle_command(ivector_t *parts);
+#include "state.h"
+
+bool handle_command(ivector_t *parts, state_t *state);
 
 #endif

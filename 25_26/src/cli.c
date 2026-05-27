@@ -21,7 +21,7 @@ ivector_t *get_command()
 				continue;
 
 			line_buffer[head++] = 0;
-			ivector_append(vec, first);
+			ivector_append(vec, &first);
 			first = &line_buffer[head];
 			continue;
 		}
@@ -36,7 +36,7 @@ ivector_t *get_command()
 			{
 				quotes = false;
 				line_buffer[head++] = 0;
-				ivector_append(vec, first);
+				ivector_append(vec, &first);
 				first = &line_buffer[head];
 			}
 			continue;
@@ -49,7 +49,7 @@ ivector_t *get_command()
 	if (first != &line_buffer[head])
 	{
 		line_buffer[head] = 0;
-		ivector_append(vec, first);
+		ivector_append(vec, &first);
 	}
 
 	return vec;
