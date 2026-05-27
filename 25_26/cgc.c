@@ -105,6 +105,7 @@ static size_t allocd_size_since_collect = 0;
 // Callee saved registers (rbx, r12-15)
 #define CALLEE_REGISTER_COUNT 5
 extern uint64_t _cgc_callee_registers[CALLEE_REGISTER_COUNT];
+extern uint64_t _cgc_return_address;
 
 
 
@@ -134,7 +135,7 @@ static void sweep(hashset_t *marked);
 void *cgc_malloc(size_t size)
 {
 	CGC_PUBLIC_ENTER(DO_GC);
-	DBG_INFO_CALL("malloc(%lu)\n", size);
+	DBG_INFO_CALL("malloc(%lu) from %p\n", size, (void*)_cgc_return_address);
 	void *new_ptr;
 
 	if (size == 0)
@@ -157,7 +158,7 @@ _malloc_skip:
 void cgc_free(void *ptr)
 {
 	CGC_PUBLIC_ENTER(NO_GC);
-	DBG_INFO_CALL("free(%p)\n", ptr);
+	DBG_INFO_CALL("free(%p) from %p\n", ptr, (void*)_cgc_return_address);
 
 	inner_free(ptr);
 
@@ -167,7 +168,7 @@ void cgc_free(void *ptr)
 void *cgc_calloc(size_t n, size_t size)
 {
 	CGC_PUBLIC_ENTER(DO_GC);
-	DBG_INFO_CALL("calloc(%lu, %lu)\n", n, size);
+	DBG_INFO_CALL("calloc(%lu, %lu) from %p\n", n, size, (void*)_cgc_return_address);
 	void *new_ptr;
 
 	// Prevent overflow
@@ -197,7 +198,7 @@ _calloc_skip:
 void *cgc_realloc(void *p, size_t size)
 {
 	CGC_PUBLIC_ENTER(DO_GC);
-	DBG_INFO_CALL("realloc(%p, %lu)\n", p, size);
+	DBG_INFO_CALL("realloc(%p, %lu) from %p\n", p, size, (void*)_cgc_return_address);
 
 	void *new_ptr;
 	if (size == 0)
@@ -218,7 +219,7 @@ _realloc_skip:
 void *cgc_reallocarray(void *p, size_t n, size_t size)
 {
 	CGC_PUBLIC_ENTER(DO_GC);
-	DBG_INFO_CALL("reallocarray(%p, %lu, %lu)\n", p, n, size);
+	DBG_INFO_CALL("reallocarray(%p, %lu, %lu) from %p\n", p, n, size, (void*)_cgc_return_address);
 	void *new_ptr;
 
 	// Prevent overflow
@@ -272,10 +273,11 @@ static void cleanup()
 	CGC_PUBLIC_ENTER(NO_GC);
 
 	DBG_INFO_GOOD("Cleanup at shutdown\n");
-	DBG_INFO("%ld allocations left-over\n", hashtable_get_count(allocs););
+	DBG_INFO("%ld allocations left-over\n", hashtable_get_count(allocs));
 
 	//Run normal free to cleanup left-over allocs
-	hashtable_destroy_free(allocs, _cgc_real_free, NULL);
+	//hashtable_destroy_free(allocs, _cgc_real_free, NULL);
+	DBG_WARN("Cleanup at exit ignored (buggy)\n");
 
 	CGC_PUBLIC_EXIT();
 }
@@ -295,8 +297,11 @@ static void *inner_realloc(void *ptr, size_t size)
 	if (new_ptr == NULL)
 		return NULL;
 
+	if (new_ptr == (void*)0x55555556c7d0)
+	{ new_ptr = (void*)0x55555556c7d0; }
+
 	// Track allocation
-	if (old_size == 0)
+	if (old_size != 0)
 		hashtable_remove(allocs, ptr, NULL, NULL);
 	hashtable_add(allocs, new_ptr, (void*)size);
 
@@ -310,13 +315,21 @@ static void *inner_realloc(void *ptr, size_t size)
 
 static void inner_free(void *ptr)
 {
+
+	if (ptr == (void*)0x55555556c7d0)
+	{ ptr = (void*)0x55555556c7d0; }
+
 	// Free the memory
 	_cgc_real_free(ptr);
 
 	// Untrack allocation
 	size_t size;
-	if (hashtable_remove(allocs, ptr, NULL, (void**)&size) == SUS_ENTRY_NOT_FOUND)
+	int err = hashtable_remove(allocs, ptr, NULL, (void**)&size);
+	if (err == SUS_ENTRY_NOT_FOUND)
+	{
 		DBG_WARN("Freed pointer %p not allocated\n", ptr);
+		return;
+	}
 
 	// Update metrics for auto-collect
 	total_allocated -= size;
@@ -356,13 +369,10 @@ static void collect(void *stack_pointer)
 /// @param marked hashset_t<void*>
 static void mark(hashset_t *marked, void *stack_pointer)
 {
-	DBG_INFO("Marking registers\n");
 	mark_callee_registers(marked);
 
-	DBG_INFO("Stack marking from %p to %p\n", stack_pointer, stack_base);
 	mark_span(marked, stack_pointer, (char *)stack_base - (char *)stack_pointer);
 
-	DBG_INFO("Marking bss'es and data's\n");
 	// Mark .bss and .data for each loaded binary
 	dl_iterate_phdr(dl_iterate_callback, marked);
 }
@@ -373,9 +383,7 @@ static void mark_callee_registers(hashset_t *marked)
 	for (int i = 0; i < CALLEE_REGISTER_COUNT; ++i)
 	{
 		mark_span(marked, (void*)&_cgc_callee_registers[i], sizeof(uint64_t));
-		DBG_INFO("Have %ld marks after registers[%d]=0x%lx\n", hashset_get_count(marked), i, _cgc_callee_registers[i]);
 	}
-
 }
 
 static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *data)
@@ -393,7 +401,7 @@ static int dl_iterate_callback(struct dl_phdr_info *info, size_t size, void *dat
 
 		void *segment_start = (void *)(info->dlpi_addr + info->dlpi_phdr[i].p_vaddr);
 
-		DBG_INFO("Marking program header %d of '%s'.\n", i, info->dlpi_name);
+		//DBG_INFO("Marking program header %d of '%s'.\n", i, info->dlpi_name);
 		mark_span(marked, segment_start, info->dlpi_phdr[i].p_memsz);
 	}
 
@@ -495,12 +503,13 @@ static void sweep(hashset_t *marked)
 	void **allocs_v = ivector_as_pointer(all_allocs);
 	for (size_t i = 0; i < alloc_count && to_sweep != 0; ++i)
 	{
-		if (!hashset_contains(marked, allocs_v[i]))
-		{
-			DBG_TRACE("Sweeping %p\n", allocs_v[i]);
-			inner_free(allocs_v[i]);
-			--to_sweep;
-		}
+		if (hashset_contains(marked, allocs_v[i]))
+			continue;
+
+		DBG_INFO("Sweeping %p\n", allocs_v[i]);
+		//DBG_TRACE("Sweeping %p\n", allocs_v[i]);
+		inner_free(allocs_v[i]); // FIXME: Sometimes allocs_v[i] IS all_allocs
+		--to_sweep;
 	}
 
 	ivector_destroy(all_allocs);

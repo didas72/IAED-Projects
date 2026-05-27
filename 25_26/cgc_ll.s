@@ -1,8 +1,7 @@
-#TODO: Move in_cgc logic here and bypass saving of registers as well
-
 .section .bss
 
 .global _cgc_callee_registers
+.global _cgc_return_address
 .global _cgc_in_gc
 .global _cgc_real_malloc
 .global _cgc_real_calloc
@@ -11,6 +10,7 @@
 .global _cgc_real_reallocarray
 
 .hidden _cgc_callee_registers
+.hidden _cgc_return_address
 .hidden _cgc_in_gc
 .hidden _cgc_real_malloc
 .hidden _cgc_real_calloc
@@ -22,6 +22,10 @@
 _cgc_callee_registers:
 #     RBX, R12, R13, R14, R15
 .quad 0,   0,   0,   0,   0
+
+# Return address (just for funsies)
+_cgc_return_address:
+.quad 0
 
 # Avoid controlling mallocs within CGC
 _cgc_in_gc:
@@ -48,6 +52,8 @@ malloc:
 
 _malloc_tracked:
 	movq $1, _cgc_in_gc(%rip)
+	mov 0(%rsp), %rax
+	mov %rax, _cgc_return_address(%rip)
 	lea _cgc_callee_registers(%rip), %r10
 	mov %rbx,   (%r10)
 	mov %r12,  8(%r10)
@@ -67,6 +73,8 @@ calloc:
 
 _calloc_tracked:
 	movq $1, _cgc_in_gc(%rip)
+	mov 0(%rsp), %rax
+	mov %rax, _cgc_return_address(%rip)
 	lea _cgc_callee_registers(%rip), %r10
 	mov %rbx,   (%r10)
 	mov %r12,  8(%r10)
@@ -86,6 +94,8 @@ free:
 
 _free_tracked:
 	movq $1, _cgc_in_gc(%rip)
+	mov 0(%rsp), %rax
+	mov %rax, _cgc_return_address(%rip)
 	lea _cgc_callee_registers(%rip), %r10
 	mov %rbx,   (%r10)
 	mov %r12,  8(%r10)
@@ -105,6 +115,8 @@ realloc:
 
 _realloc_tracked:
 	movq $1, _cgc_in_gc(%rip)
+	mov 0(%rsp), %rax
+	mov %rax, _cgc_return_address(%rip)
 	lea _cgc_callee_registers(%rip), %r10
 	mov %rbx,   (%r10)
 	mov %r12,  8(%r10)
@@ -124,6 +136,8 @@ reallocarray:
 
 _reallocarray_tracked:
 	movq $1, _cgc_in_gc(%rip)
+	mov 0(%rsp), %rax
+	mov %rax, _cgc_return_address(%rip)
 	lea _cgc_callee_registers(%rip), %r10
 	mov %rbx,   (%r10)
 	mov %r12,  8(%r10)
