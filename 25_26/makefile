@@ -48,11 +48,12 @@ $(DIR_BUILD)/obj/%.o: $(DIR_SRC)/%.s
 	@mkdir -p $(@D)
 	$(AS) $(AS_FLAGS) -c $< -o $@
 
-$(CGC): cgc.c cgc_ll.s
+$(CGC): cgc.c cgcl.c cgc_ll.s
 	@mkdir -p $(@D)
 	$(CC) $(C_FLAGS) -fPIC -c cgc.c -o $(DIR_BUILD)/obj/cgc.o
+	$(CC) $(C_FLAGS) -fPIC -c cgcl.c -o $(DIR_BUILD)/obj/cgcl.o
 	$(AS) $(AS_FLAGS) -c cgc_ll.s -o $(DIR_BUILD)/obj/cgc_ll.o
-	$(LD) -r $(DIR_BUILD)/obj/cgc.o  $(DIR_BUILD)/obj/cgc_ll.o -L/usr/local/lib -lsus -o $(DIR_BUILD)/obj/cgc.so.o
+	$(LD) -r $(DIR_BUILD)/obj/cgc.o $(DIR_BUILD)/obj/cgcl.o $(DIR_BUILD)/obj/cgc_ll.o -L/usr/local/lib -lsus -o $(DIR_BUILD)/obj/cgc.so.o
 	$(CC) $(DIR_BUILD)/obj/cgc.so.o -shared -o $@
 
 dbg: $(OUTBIN)
